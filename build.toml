@@ -1,0 +1,19 @@
+[[Graphics]]
+name="defence secne"
+options=[
+    "-fts",				# Create s file
+    "-m!",				# No Map
+    "-gB8",				# output 8bpp graphics
+    "-gT FF00FF",		# RGB 24 BIT
+    "-pS",				# Share pallet
+    "-Mh2",			    # output data as byte array
+    "-Mw2",         	# Shared pallet name
+    "-O defenceSceneShared"
+]
+files=[
+    "gfx/defence/mailSpritesheet",
+    "gfx/defence/towerSpritesheet",
+]
+
+[[Maps]]
+path="maps/greenMap.json"

@@ -1,0 +1,163 @@
+{
+	"Waypoints": [
+		{
+			"X": 175,
+			"Y": 39
+		},
+		{
+			"X": 175,
+			"Y": 83
+		},
+		{
+			"X": 30,
+			"Y": 83
+		},
+		{
+			"X": 30,
+			"Y": 138
+		},
+		{
+			"X": 111,
+			"Y": 138
+		},
+		{
+			"X": 111,
+			"Y": 158
+		},
+		{
+			"X": 174,
+			"Y": 158
+		},
+		{
+			"X": 174,
+			"Y": 111
+		},
+		{
+			"X": 222,
+			"Y": 111
+		},
+		{
+			"X": 222,
+			"Y": 36
+		}
+	],
+	"Rounds": [
+		{
+			"Spawns": [
+				{
+					"MailType": 1,
+					"Frame": 60
+				},
+				{
+					"MailType": 2,
+					"Frame": 120
+				},
+				{
+					"MailType": 3,
+					"Frame": 180
+				},
+				{
+					"MailType": 4,
+					"Frame": 240
+				},
+				{
+					"MailType": 5,
+					"Frame": 240
+				}
+			]
+		},
+		{
+			"Spawns": [
+				{
+					"MailType": 1,
+					"Frame": 500
+				},
+				{
+					"MailType": 1,
+					"Frame": 560
+				},
+				{
+					"MailType": 1,
+					"Frame": 620
+				},
+				{
+					"MailType": 1,
+					"Frame": 680
+				}
+			]
+		}
+	],
+	"Paths": [
+		{
+			"X": 0,
+			"Y": 39,
+			"Width": 193,
+			"Height": 16
+		},
+		{
+			"X": 175,
+			"Y": 41,
+			"Width": 16,
+			"Height": 60
+		},
+		{
+			"X": 31,
+			"Y": 83,
+			"Width": 150,
+			"Height": 16
+		},
+		{
+			"X": 30,
+			"Y": 82,
+			"Width": 16,
+			"Height": 72
+		},
+		{
+			"X": 44,
+			"Y": 138,
+			"Width": 83,
+			"Height": 16
+		},
+		{
+			"X": 111,
+			"Y": 158,
+			"Width": 79,
+			"Height": 16
+		},
+		{
+			"X": 174,
+			"Y": 111,
+			"Width": 16,
+			"Height": 60
+		},
+		{
+			"X": 183,
+			"Y": 111,
+			"Width": 55,
+			"Height": 16
+		},
+		{
+			"X": 222,
+			"Y": 55,
+			"Width": 16,
+			"Height": 62
+		},
+		{
+			"X": 111,
+			"Y": 147,
+			"Width": 16,
+			"Height": 19
+		},
+		{
+			"X": 222,
+			"Y": 32,
+			"Width": 16,
+			"Height": 26
+		}
+	],
+	"StartingPosition": {
+		"X": 0,
+		"Y": 39
+	},
+	"ImageFilename": "gfx/maps/greenMap.psd"
+}
