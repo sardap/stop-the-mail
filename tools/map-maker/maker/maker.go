@@ -1,4 +1,4 @@
-package main
+package maker
 
 import (
 	"bytes"
@@ -12,7 +12,95 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	_ "github.com/oov/psd"
 )
+
+type Rect struct {
+	X int
+	Y int
+	W int
+	H int
+}
+
+func RectContains(r1, r2 Rect) bool {
+	return (r2.X+r2.W < r1.X+r1.W) &&
+		(r2.X > r1.X) &&
+		(r2.Y > r1.Y) &&
+		(r2.Y+r2.H < r1.Y+r1.H)
+}
+
+func RectInPath(rect Rect, paths []Path) bool {
+	for _, path := range paths {
+		if RectContains(Rect{X: path.X, Y: path.Y, W: path.Width, H: path.Height}, rect) {
+			return true
+		}
+	}
+	return false
+}
+
+func PointInRect(x, y int, r Rect) bool {
+	return (r.X <= x) && (x <= r.X+r.W) && (r.Y <= y) && (y <= r.Y+r.H)
+}
+
+func PointInPath(x, y int, paths []Path) *Rect {
+	for _, path := range paths {
+		r := Rect{X: path.X, Y: path.Y, W: path.Width, H: path.Height}
+		if PointInRect(x, y, r) {
+			return &r
+		}
+	}
+	return nil
+}
+
+type Position struct {
+	X int
+	Y int
+}
+
+func (p *Position) Move(x, y int) {
+	p.X += x
+	p.Y += y
+}
+
+type Moveable interface {
+	Move(x, y int)
+}
+
+type Path struct {
+	X      int
+	Y      int
+	Width  int
+	Height int
+}
+
+func (p *Path) Move(x, y int) {
+	p.X += x
+	p.Y += y
+}
+
+func (p *Path) AsRect() Rect {
+	return Rect{p.X, p.Y, p.Width, p.Height}
+}
+
+type Waypoint struct {
+	X int
+	Y int
+}
+
+func (w *Waypoint) Move(x, y int) {
+	w.X += x
+	w.Y += y
+}
+
+type Spawn struct {
+	MailType int
+	Frame    uint32
+}
+
+type Round struct {
+	Spawns []Spawn
+}
 
 type Generate struct {
 	Waypoints        []Waypoint

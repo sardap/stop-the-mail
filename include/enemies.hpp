@@ -2,6 +2,7 @@
 
 // STOP THE MAIL
 
+#include "collision.hpp"
 #include "common.hpp"
 #include "waypoints.hpp"
 
@@ -13,10 +14,13 @@ struct Mail {
     Vel vel;
     Graphics gfx;
     Life life;
+    Identity identity;
+    Collsion collsion;
     Fixed speed;
+    Fixed distance_from_end;
     bool active;
 };
 
-void update_mail(Mail& mail);
+void step_mail_collsion(Mail& mail);
 
 }  // namespace sm

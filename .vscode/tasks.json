@@ -18,7 +18,7 @@
                 "${workspaceFolder}/build.toml",
                 "${workspaceFolder}/assets",
                 "${workspaceFolder}/build",
-                "${workspaceFolder}/tools/map-maker",
+                "${workspaceFolder}/tools/map-maker/cmd/gen",
                 "DEBUG=1",
             ],
             "group": {

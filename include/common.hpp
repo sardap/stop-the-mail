@@ -3,6 +3,7 @@
 #include <nds.h>
 #include <nds/ndstypes.h>
 
+#include <array>
 #include <fixed/fixed.hpp>
 
 namespace sm {

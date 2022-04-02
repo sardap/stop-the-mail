@@ -54,7 +54,9 @@
         "ostream": "cpp",
         "stdexcept": "cpp",
         "streambuf": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "variant": "cpp",
+        "ranges": "cpp"
     },
     "editor.formatOnSave": true,
     "C_Cpp.errorSquiggles": "Disabled"

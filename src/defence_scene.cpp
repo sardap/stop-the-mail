@@ -10,7 +10,8 @@
 namespace sm {
 
 static const int mail_oam_id_offset = 127 - 70;
-static const int tower_oam_id_offset = mail_oam_id_offset - 30;
+static const int tower_oam_id_offset = mail_oam_id_offset - 15;
+static const int effects_oam_id_offset = tower_oam_id_offset - 30;
 
 DefenceScene::DefenceScene(const level::Level& level)
     : m_level(std::move(level)),
@@ -31,6 +32,11 @@ DefenceScene::DefenceScene(const level::Level& level)
 
     dmaCopy(defenceSceneSharedPal, SPRITE_PALETTE, defenceSceneSharedPalLen);
 
+    // Zero out collisions
+    for (size_t i = 0; i < m_collisions.size(); i++) {
+        m_collisions[i] = nullptr;
+    }
+
     for (size_t i = 0; i < m_mails.size(); i++) {
         auto& mail = m_mails[i];
         mail.active = false;
@@ -38,6 +44,9 @@ DefenceScene::DefenceScene(const level::Level& level)
         mail.gfx.oam_id = mail_oam_id_offset + i;
         mail.gfx.tile = oamAllocateGfx(mail.gfx.oam, SpriteSize_16x16,
                                        SpriteColorFormat_256Color);
+
+        mail.collsion.owner.mail = &mail;
+        mail.collsion.owner.type = Identity::Type::MAIL;
     }
 
     for (size_t i = 0; i < m_towers.size(); i++) {
@@ -49,12 +58,31 @@ DefenceScene::DefenceScene(const level::Level& level)
                                         SpriteColorFormat_256Color);
     }
 
-    create_tower(TowerType::CAT, Position{.x = Fixed(10), .y = Fixed(20)});
+    for (size_t i = 0; i < m_effects.size(); i++) {
+        auto& effect = m_effects[i];
+        effect.active = false;
+        effect.gfx.oam = &oamMain;
+        effect.gfx.oam_id = effects_oam_id_offset + i;
+        effect.gfx.tile = nullptr;
+    }
+
+    create_cat(Position{.x = Fixed(30), .y = Fixed(20)},
+               Position{.x = Fixed(30), .y = Fixed(36)});
 }
 
 DefenceScene::~DefenceScene() {
     for (const auto& mail : m_mails) {
-        oamFreeGfx(&oamMain, mail.gfx.tile);
+        oamFreeGfx(mail.gfx.oam, mail.gfx.tile);
+    }
+
+    for (const auto& tower : m_towers) {
+        oamFreeGfx(tower.gfx.oam, tower.gfx.tile);
+    }
+
+    for (const auto& effect : m_effects) {
+        if (effect.gfx.tile != nullptr) {
+            oamFreeGfx(effect.gfx.oam, effect.gfx.tile);
+        }
     }
 }
 
@@ -62,6 +90,9 @@ void DefenceScene::update() {
     spawn_pending();
 
     iprintf("Current Round %d\n", m_round_idx);
+
+    // Update collisions
+    update_collisions<100>(m_collisions);
 
     for (size_t i = 0; i < m_mails.size(); i++) {
         update_mail(m_mails[i], i);
@@ -142,6 +173,9 @@ Mail& DefenceScene::create_mail(const level::SpawnInfo& spawn_info) {
     u8* offset = (u8*)mailSpritesheetTiles + (tileOffset * (16 * 16));
     dmaCopy(offset, mail.gfx.tile, 16 * 16);
 
+    add_collsion(&mail.collsion);
+    step_mail_collsion(mail);
+
     return mail;
 }
 
@@ -149,6 +183,7 @@ void DefenceScene::free_mail(sm::Mail& mail, int idx) {
     mail.active = false;
     m_mail_idx = idx;
     oamSetHidden(mail.gfx.oam, mail.gfx.oam_id, true);
+    remove_collsion(&mail.collsion);
 }
 
 void DefenceScene::update_mail(sm::Mail& mail, int idx) {
@@ -162,7 +197,14 @@ void DefenceScene::update_mail(sm::Mail& mail, int idx) {
         return;
     }
     postion_update(mail.postion, mail.vel);
+    step_mail_collsion(mail);
+
     update_oam(mail.postion, mail.gfx);
+
+    mail.distance_from_end =
+        distance(mail.postion, mail.waypoint.waypoints->get_last_point());
+
+    refresh_collision(mail.collsion);
 }
 
 bool DefenceScene::any_mail_active() {
@@ -175,20 +217,17 @@ bool DefenceScene::any_mail_active() {
     return false;
 }
 
-#pragma GCC push_options
-#pragma GCC optimize("O0")
-Tower& DefenceScene::create_tower(const TowerType& type, Position pos) {
+Tower& DefenceScene::create_cat(Position pos, Position colPos) {
     auto& tower = get_free_tower();
     tower.active = true;
 
-    int tileOffset = -1;
-    switch (type) {
-        case TowerType::CAT:
-            tileOffset = 0;
-            break;
-    }
-
-    assert(tileOffset >= 0);
+    auto tileOffset = 0;
+    Cat& cat = std::get<Cat>(tower.specific);
+    setup_collision(
+        cat.col,
+        Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
+        Rectangle{.x = colPos.x, .y = colPos.y, .w = 16, .h = 16});
+    add_collsion(&cat.col);
 
     tower.pos = pos;
     u8* offset = (u8*)towerSpritesheetTiles + (tileOffset * (16 * 16));
@@ -196,7 +235,6 @@ Tower& DefenceScene::create_tower(const TowerType& type, Position pos) {
 
     return tower;
 }
-#pragma GCC pop_options
 
 void DefenceScene::free_tower(sm::Tower& tower, int idx) {
     tower.active = false;
@@ -204,16 +242,57 @@ void DefenceScene::free_tower(sm::Tower& tower, int idx) {
     oamSetHidden(tower.gfx.oam, tower.gfx.oam_id, true);
 }
 
+#pragma GCC push_options
+#pragma GCC optimize("O0")
+
 void DefenceScene::update_tower(sm::Tower& tower, int idx) {
     if (!tower.active) {
         return;
     }
 
     update_oam(tower.pos, tower.gfx);
+
+    if (auto* cat = std::get_if<Cat>(&tower.specific); cat) {
+        for (size_t i = 0; i < cat->col.collisions.size(); i++) {
+            if (!cat->col.collisions[i]) {
+                break;
+            }
+            const auto& collider = cat->col.collisions[i]->object;
+            switch (collider.type) {
+                case Identity::Type::INVALID:
+                    break;
+                case Identity::Type::MAIL:
+                    break;
+                case Identity::Type::TOWER:
+                    break;
+            }
+        }
+
+        refresh_collision(cat->col);
+    }
 }
+#pragma GCC pop_options
 
 Tower& DefenceScene::get_free_tower() {
-    return get_free<Tower, 30>(m_towers, m_tower_idx, m_spare_tower);
+    return get_free<Tower, 15>(m_towers, m_tower_idx, m_spare_tower);
+}
+
+void DefenceScene::add_collsion(Collsion* collsion) {
+    for (size_t i = 0; i < m_collisions.size(); i++) {
+        if (m_collisions[i] == nullptr) {
+            m_collisions[i] = collsion;
+            break;
+        }
+    }
+}
+
+void DefenceScene::remove_collsion(Collsion* collsion) {
+    for (size_t i = 0; i < m_collisions.size(); i++) {
+        if (m_collisions[i] == collsion) {
+            m_collisions[i] = nullptr;
+            break;
+        }
+    }
 }
 
 }  // namespace sm
