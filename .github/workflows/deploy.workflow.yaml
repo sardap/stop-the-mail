@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build image
-        run: docker build . -t gba_build:latest
+        run: docker build . -t stm-builder:latest
       - name: Build Rom
         run: docker run -v ${PWD}:/out --entrypoint cp stm-builder:latest /app/app.nds /out/stop-the-mail.nds
       - name: Create Release
