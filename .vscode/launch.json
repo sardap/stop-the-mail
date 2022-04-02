@@ -33,11 +33,10 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/tools/map-maker",
+            "program": "${workspaceFolder}/tools/map-maker/cmd/edit",
             "args": [
-                "edit",
-                "${workspaceFolder}/maps/greenMap.json",
-                "${workspaceFolder}/maps"
+                "${workspaceFolder}/assets/maps/greenMap.json",
+                "${workspaceFolder}/assets"
             ]
         },
         {
@@ -45,9 +44,8 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/tools/map-maker",
+            "program": "${workspaceFolder}/tools/map-maker/cmd/gen",
             "args": [
-                "generate",
                 "${workspaceFolder}",
                 "${workspaceFolder}/assets",
                 "${workspaceFolder}/assets/maps"

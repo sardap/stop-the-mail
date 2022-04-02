@@ -257,64 +257,52 @@ func (w *Window) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	mode := os.Args[1]
+	mapPic := os.Args[1]
+	outPath := os.Args[2]
 
-	if mode == "edit" {
-		mapPic := os.Args[2]
-		outPath := os.Args[3]
-
-		var genrate maker.Generate
-		if filepath.Ext(mapPic) == ".json" {
-			jsonBytes, _ := os.ReadFile(mapPic)
-			json.Unmarshal(jsonBytes, &genrate)
-		} else {
-			genrate.Waypoints = nil
-			genrate.Rounds = nil
-			genrate.Paths = nil
-			genrate.ImageFilename = mapPic
-		}
-
-		// Open map pic
-		img := func() image.Image {
-			f, err := os.Open(filepath.Join(outPath, genrate.ImageFilename))
-			if err != nil {
-				log.Fatalf("Cannot open %s", genrate.ImageFilename)
-			}
-			defer f.Close()
-
-			result, _, err := image.Decode(f)
-			if err != nil {
-				log.Fatalf("Unable to decode image %s %v", genrate.ImageFilename, err)
-			}
-
-			result = resize.Resize(dsScreenWidth, dsScreenHeight, result, resize.NearestNeighbor)
-
-			return result
-		}()
-
-		w := &Window{
-			Image:        ebiten.NewImageFromImage(img),
-			ImagePath:    genrate.ImageFilename,
-			OutPath:      outPath,
-			Waypoints:    genrate.Waypoints,
-			Rounds:       genrate.Rounds,
-			Paths:        genrate.Paths,
-			SpawnPostion: genrate.StartingPosition,
-		}
-
-		ebiten.SetWindowSize(screenWidth, screenHeight)
-		ebiten.SetWindowTitle("Stop the mail map maker")
-		if err := ebiten.RunGame(w); err != nil {
-			log.Fatal(err)
-		}
-	} else if mode == "generate" {
-		outPath := os.Args[2]
-		assetsPath := os.Args[3]
-		file := os.Args[4]
-		var genrate maker.Generate
-		jsonBytes, _ := os.ReadFile(file)
+	var genrate maker.Generate
+	if filepath.Ext(mapPic) == ".json" {
+		jsonBytes, _ := os.ReadFile(mapPic)
 		json.Unmarshal(jsonBytes, &genrate)
-		genrate.Generate(assetsPath, outPath)
+	} else {
+		genrate.Waypoints = nil
+		genrate.Rounds = nil
+		genrate.Paths = nil
+		genrate.ImageFilename = mapPic
+	}
+
+	// Open map pic
+	img := func() image.Image {
+		f, err := os.Open(filepath.Join(outPath, genrate.ImageFilename))
+		if err != nil {
+			log.Fatalf("Cannot open %s", genrate.ImageFilename)
+		}
+		defer f.Close()
+
+		result, _, err := image.Decode(f)
+		if err != nil {
+			log.Fatalf("Unable to decode image %s %v", genrate.ImageFilename, err)
+		}
+
+		result = resize.Resize(dsScreenWidth, dsScreenHeight, result, resize.NearestNeighbor)
+
+		return result
+	}()
+
+	w := &Window{
+		Image:        ebiten.NewImageFromImage(img),
+		ImagePath:    genrate.ImageFilename,
+		OutPath:      outPath,
+		Waypoints:    genrate.Waypoints,
+		Rounds:       genrate.Rounds,
+		Paths:        genrate.Paths,
+		SpawnPostion: genrate.StartingPosition,
+	}
+
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowTitle("Stop the mail map maker")
+	if err := ebiten.RunGame(w); err != nil {
+		log.Fatal(err)
 	}
 
 }

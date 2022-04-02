@@ -34,7 +34,7 @@ class Fixed {
         return *this;
     }
 
-    Fixed<T>& operator=(Fixed<T> other) noexcept {
+    Fixed<T>& operator=(const Fixed<T>& other) noexcept {
         mVal = other.mVal;
         return *this;
     }

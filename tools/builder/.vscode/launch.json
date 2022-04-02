@@ -13,7 +13,7 @@
 				"${workspaceFolder}/../../build.toml",
 				"${workspaceFolder}/../../assets",
 				"${workspaceFolder}/../../build",
-				"${workspaceFolder}/../map-maker",
+				"${workspaceFolder}/../map-maker/cmd/gen",
 			]
 		},
 		{
@@ -29,7 +29,7 @@
 				"${workspaceFolder}/../../build.toml",
 				"${workspaceFolder}/../../assets",
 				"${workspaceFolder}/../../build/gfx",
-				"${workspaceFolder}/../map-maker",
+				"${workspaceFolder}/../map-maker/cmd/gen",
 			]
 		},
 		{

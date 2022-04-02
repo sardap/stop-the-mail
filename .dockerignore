@@ -1,0 +1,6 @@
+build/*
+app.elf
+app.nds
+ds.elf
+ds.nds
+.vscode/*

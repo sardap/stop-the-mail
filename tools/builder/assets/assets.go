@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"log"
 
 	"bytes"
 	"context"
@@ -97,6 +98,11 @@ func (g *GraphicsOutput) changedFiles(
 }
 
 func buildMapMaker(mapGenPath string) string {
+	path, err := exec.LookPath(mapGenPath)
+	if err == nil {
+		return path
+	}
+
 	cmd := exec.Command("go", "build", "-o", "map-maker.exe", ".")
 	cmd.Dir = mapGenPath
 
@@ -115,15 +121,18 @@ type MapOutput struct {
 }
 
 func (m *MapOutput) Generate(mapGenPath, assetsPath, targetPath string) {
-	cmd := exec.Command(mapGenPath, "generate", targetPath, assetsPath, filepath.Join(assetsPath, m.Path))
+	cmd := exec.Command(mapGenPath, targetPath, assetsPath, filepath.Join(assetsPath, m.Path))
 
 	var stdBuffer bytes.Buffer
 	mw := io.MultiWriter(os.Stdout, &stdBuffer)
 	cmd.Stdout = mw
 	cmd.Stderr = mw
 
-	fmt.Printf("Building Map %s\n", m.Path)
-	cmd.Run()
+	fmt.Printf("Building Map %s using %s %v\n", m.Path, mapGenPath, cmd.Args)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatalf("Error building map %s %v", m.Path, err)
+	}
 }
 
 //Make makes assets
@@ -210,7 +219,7 @@ func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 	fmt.Printf("\nRunning Maps\n")
 
 	mapMakerPath := buildMapMaker(generatePath)
-	fmt.Printf("Map maker built\n")
+	fmt.Printf("Map maker built %s\n", mapMakerPath)
 
 	for _, target := range config.Maps {
 		target.Generate(mapMakerPath, assetsPath, targetPath)

@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
 #include "towers.hpp"
@@ -25,8 +26,14 @@ class DefenceScene {
     Mail m_spare_mail;
 
     size_t m_tower_idx;
-    std::array<Tower, 30> m_towers;
+    std::array<Tower, 15> m_towers;
     Tower m_spare_tower;
+
+    size_t m_effect_idx;
+    std::array<Effect, 30> m_effects;
+    Effect m_spare_effect;
+
+    std::array<Collsion*, 100> m_collisions;
 
     void spawn_pending();
 
@@ -52,10 +59,14 @@ class DefenceScene {
     Mail& get_free_mail();
     bool any_mail_active();
 
-    Tower& create_tower(const TowerType& type, Position pos);
+    Tower& create_cat(Position pos, Position colPos);
+
     void free_tower(sm::Tower& mail, int idx);
     void update_tower(sm::Tower& mail, int idx);
     Tower& get_free_tower();
+
+    void add_collsion(Collsion* collsion);
+    void remove_collsion(Collsion* collsion);
 };
 
 }  // namespace sm
