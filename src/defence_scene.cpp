@@ -6,6 +6,7 @@
 
 #include <common.hpp>
 #include <defence_scene.hpp>
+#include <update_mail.hpp>
 #include <update_tower.hpp>
 
 namespace sm {
@@ -28,11 +29,6 @@ DefenceScene::DefenceScene(const level::Level& level)
     oamInit(&oamMain, SpriteMapping_1D_128, false);
 
     dmaCopy(defenceSceneSharedPal, SPRITE_PALETTE, defenceSceneSharedPalLen);
-
-    // Zero out collisions
-    for (size_t i = 0; i < m_collisions.size(); i++) {
-        m_collisions[i] = nullptr;
-    }
 
     for (size_t i = 0; i < m_objects.m_mails.size(); i++) {
         auto& mail = m_objects.m_mails[i];
@@ -63,7 +59,7 @@ DefenceScene::DefenceScene(const level::Level& level)
         effect.gfx.tile = nullptr;
     }
 
-    create_cat(Position{.x = Fixed(30), .y = Fixed(20)},
+    create_cat(m_objects, Position{.x = Fixed(30), .y = Fixed(20)},
                Position{.x = Fixed(30), .y = Fixed(36)});
 }
 
@@ -89,10 +85,10 @@ void DefenceScene::update() {
     // iprintf("Current Round %d\n", m_round_idx);
 
     // Update collisions
-    update_collisions<100>(m_collisions);
+    update_collisions<100>(m_objects.m_collisions);
 
     for (size_t i = 0; i < m_objects.m_mails.size(); i++) {
-        update_mail(m_objects.m_mails[i], i);
+        update_mail(m_objects, m_objects.m_mails[i], i);
     }
 
     for (size_t i = 0; i < m_objects.m_towers.size(); i++) {
@@ -120,93 +116,9 @@ void DefenceScene::spawn_pending() {
     }
 
     if (globals::current_frame >= round.spawns[m_spawn_idx]->frame) {
-        create_mail(*current_spawn);
+        create_mail(m_objects, m_level, *current_spawn);
         m_spawn_idx++;
     }
-}
-
-Mail& DefenceScene::create_mail(const level::SpawnInfo& spawn_info) {
-    auto& mail = m_objects.get_free_mail();
-
-    mail.postion = m_level.starting_point;
-    mail.waypoint = Waypoint{
-        .current_waypoint_idx = 0,
-        .waypoints = &m_level.mail_waypoints,
-    };
-    mail.vel.vx = Fixed(0);
-    mail.vel.vy = Fixed(0);
-    mail.active = true;
-
-    int tileOffset = 0;
-    switch (spawn_info.type) {
-        case level::MailType::INVALID:
-        case level::MailType::BASIC_ENVELOPE:
-            mail.speed = Fixed(0.4);
-            mail.life.maxHp = Fixed(1);
-            tileOffset = 0;
-            break;
-        case level::MailType::OFFICIAL_ENVELOPE:
-            mail.speed = Fixed(0.8);
-            mail.life.maxHp = Fixed(2);
-            tileOffset = 1;
-            break;
-        case level::MailType::EXPRESS_ENVELOPE:
-            mail.speed = Fixed(1.6);
-            mail.life.maxHp = Fixed(1);
-            tileOffset = 2;
-            break;
-        case level::MailType::EXPRESS_OFFICIAL_ENVELOPE:
-            mail.speed = Fixed(1.8);
-            mail.life.maxHp = Fixed(2);
-            tileOffset = 3;
-            break;
-        case level::MailType::BASIC_PACKAGE:
-            mail.speed = Fixed(0.3);
-            mail.life.maxHp = Fixed(5);
-            tileOffset = 4;
-            break;
-    }
-    mail.life.currentHp = mail.life.maxHp;
-    u8* offset = (u8*)mailSpritesheetTiles + (tileOffset * (16 * 16));
-    dmaCopy(offset, mail.gfx.tile, 16 * 16);
-
-    add_collsion(&mail.collsion);
-    step_mail_collsion(mail);
-
-    return mail;
-}
-
-void DefenceScene::free_mail(sm::Mail& mail, int idx) {
-    mail.active = false;
-    m_objects.m_mail_idx = idx;
-    oamSetHidden(mail.gfx.oam, mail.gfx.oam_id, true);
-    remove_collsion(&mail.collsion);
-}
-
-void DefenceScene::update_mail(sm::Mail& mail, int idx) {
-    if (!mail.active) {
-        return;
-    }
-
-    if (mail.life.currentHp <= Fixed(0)) {
-        free_mail(mail, idx);
-        return;
-    }
-
-    waypoint_update(mail.waypoint, mail.vel, mail.postion, mail.speed);
-    if (mail.waypoint.current_waypoint_idx >= mail.waypoint.waypoints->count) {
-        free_mail(mail, idx);
-        return;
-    }
-    postion_update(mail.postion, mail.vel);
-    step_mail_collsion(mail);
-
-    update_oam(mail.postion, mail.gfx);
-
-    mail.distance_from_end =
-        distance(mail.postion, mail.waypoint.waypoints->get_last_point());
-
-    refresh_collision(mail.collsion);
 }
 
 bool DefenceScene::any_mail_active() {
@@ -217,50 +129,6 @@ bool DefenceScene::any_mail_active() {
     }
 
     return false;
-}
-
-Tower& DefenceScene::create_cat(Position pos, Position colPos) {
-    auto& tower = m_objects.get_free_tower();
-    tower.active = true;
-
-    auto tileOffset = 0;
-    Cat& cat = std::get<Cat>(tower.specific);
-    setup_collision(
-        cat.col,
-        Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
-        Rectangle{.x = colPos.x, .y = colPos.y, .w = 16, .h = 16});
-    add_collsion(&cat.col);
-    cat.current_cooldown = 0;
-
-    tower.pos = pos;
-    u8* offset = (u8*)towerSpritesheetTiles + (tileOffset * (16 * 16));
-    dmaCopy(offset, tower.gfx.tile, 16 * 16);
-
-    return tower;
-}
-
-void DefenceScene::free_tower(sm::Tower& tower, int idx) {
-    tower.active = false;
-    m_objects.m_tower_idx = idx;
-    oamSetHidden(tower.gfx.oam, tower.gfx.oam_id, true);
-}
-
-void DefenceScene::add_collsion(Collsion* collsion) {
-    for (size_t i = 0; i < m_collisions.size(); i++) {
-        if (m_collisions[i] == nullptr) {
-            m_collisions[i] = collsion;
-            break;
-        }
-    }
-}
-
-void DefenceScene::remove_collsion(Collsion* collsion) {
-    for (size_t i = 0; i < m_collisions.size(); i++) {
-        if (m_collisions[i] == collsion) {
-            m_collisions[i] = nullptr;
-            break;
-        }
-    }
 }
 
 }  // namespace sm

@@ -24,8 +24,6 @@ class DefenceScene {
 
     Container<70, 15, 30> m_objects;
 
-    std::array<Collsion*, 100> m_collisions;
-
     void spawn_pending();
 
     template <typename T, size_t N>
@@ -44,17 +42,7 @@ class DefenceScene {
         return spare;
     }
 
-    Mail& create_mail(const level::SpawnInfo& spawn_info);
-    void free_mail(sm::Mail& mail, int idx);
-    void update_mail(sm::Mail& mail, int idx);
     bool any_mail_active();
-
-    Tower& create_cat(Position pos, Position colPos);
-
-    void free_tower(sm::Tower& mail, int idx);
-
-    void add_collsion(Collsion* collsion);
-    void remove_collsion(Collsion* collsion);
 };
 
 }  // namespace sm

@@ -47,6 +47,6 @@ void waypoint_update(Waypoint& waypoint, Vel& vel, Position& pos,
     vel.vy = (ty / dist) * speed;
 }
 
-Position Waypoints::get_last_point() { return points[count - 1]; }
+Position Waypoints::get_last_point() const { return points[count - 1]; }
 
 }  // namespace sm

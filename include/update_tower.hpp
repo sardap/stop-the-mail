@@ -6,6 +6,33 @@
 namespace sm {
 
 template <IsContainer T>
+Tower& create_cat(T& container, Position pos, Position colPos) {
+    auto& tower = container.get_free_tower();
+    tower.active = true;
+
+    auto tileOffset = 0;
+    Cat& cat = std::get<Cat>(tower.specific);
+    setup_collision(
+        cat.col,
+        Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
+        Rectangle{.x = colPos.x, .y = colPos.y, .w = 16, .h = 16});
+    container.add_collsion(&cat.col);
+    cat.current_cooldown = 0;
+
+    tower.pos = pos;
+    u8* offset = (u8*)towerSpritesheetTiles + (tileOffset * (16 * 16));
+    dmaCopy(offset, tower.gfx.tile, 16 * 16);
+
+    return tower;
+}
+
+template <IsContainer T>
+void free_tower(T& container, sm::Tower& tower, int idx) {
+    container.free_tower(tower, idx);
+    oamSetHidden(tower.gfx.oam, tower.gfx.oam_id, true);
+}
+
+template <IsContainer T>
 void update_tower(T& container, sm::Tower& tower) {
     if (!tower.active) {
         return;

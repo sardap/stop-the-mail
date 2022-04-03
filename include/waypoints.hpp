@@ -14,12 +14,12 @@ struct Waypoints {
     Waypoints(std::initializer_list<Position> postions);
     ~Waypoints();
 
-    Position get_last_point();
+    Position get_last_point() const;
 };
 
 struct Waypoint {
     size_t current_waypoint_idx;
-    Waypoints* waypoints;
+    const Waypoints* waypoints;
 };
 
 void waypoint_update(Waypoint& waypoint, Vel& vel, Position& pos,
