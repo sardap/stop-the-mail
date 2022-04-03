@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "container.hpp"
 #include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
@@ -21,17 +22,7 @@ class DefenceScene {
     size_t m_round_idx;
     size_t m_spawn_idx;
 
-    size_t m_mail_idx;
-    std::array<Mail, 70> m_mails;
-    Mail m_spare_mail;
-
-    size_t m_tower_idx;
-    std::array<Tower, 15> m_towers;
-    Tower m_spare_tower;
-
-    size_t m_effect_idx;
-    std::array<Effect, 30> m_effects;
-    Effect m_spare_effect;
+    Container<70, 15, 30> m_objects;
 
     std::array<Collsion*, 100> m_collisions;
 
@@ -56,14 +47,11 @@ class DefenceScene {
     Mail& create_mail(const level::SpawnInfo& spawn_info);
     void free_mail(sm::Mail& mail, int idx);
     void update_mail(sm::Mail& mail, int idx);
-    Mail& get_free_mail();
     bool any_mail_active();
 
     Tower& create_cat(Position pos, Position colPos);
 
     void free_tower(sm::Tower& mail, int idx);
-    void update_tower(sm::Tower& mail, int idx);
-    Tower& get_free_tower();
 
     void add_collsion(Collsion* collsion);
     void remove_collsion(Collsion* collsion);

@@ -50,8 +50,10 @@ struct Rectangle {
 };
 
 struct Life {
-    int maxHp;
-    int currentHp;
+    Fixed maxHp;
+    Fixed currentHp;
 };
+
+void apply_damage(Life& life, Fixed damage);
 
 }  // namespace sm

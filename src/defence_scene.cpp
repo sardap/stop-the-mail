@@ -6,6 +6,7 @@
 
 #include <common.hpp>
 #include <defence_scene.hpp>
+#include <update_tower.hpp>
 
 namespace sm {
 
@@ -14,11 +15,7 @@ static const int tower_oam_id_offset = mail_oam_id_offset - 15;
 static const int effects_oam_id_offset = tower_oam_id_offset - 30;
 
 DefenceScene::DefenceScene(const level::Level& level)
-    : m_level(std::move(level)),
-      m_round_idx(0),
-      m_spawn_idx(0),
-      m_mail_idx(0),
-      m_tower_idx(0) {
+    : m_level(std::move(level)), m_round_idx(0), m_spawn_idx(0) {
     videoSetMode(MODE_5_2D);
     vramSetBankA(VRAM_A_MAIN_BG);
 
@@ -37,8 +34,8 @@ DefenceScene::DefenceScene(const level::Level& level)
         m_collisions[i] = nullptr;
     }
 
-    for (size_t i = 0; i < m_mails.size(); i++) {
-        auto& mail = m_mails[i];
+    for (size_t i = 0; i < m_objects.m_mails.size(); i++) {
+        auto& mail = m_objects.m_mails[i];
         mail.active = false;
         mail.gfx.oam = &oamMain;
         mail.gfx.oam_id = mail_oam_id_offset + i;
@@ -49,8 +46,8 @@ DefenceScene::DefenceScene(const level::Level& level)
         mail.collsion.owner.type = Identity::Type::MAIL;
     }
 
-    for (size_t i = 0; i < m_towers.size(); i++) {
-        auto& tower = m_towers[i];
+    for (size_t i = 0; i < m_objects.m_towers.size(); i++) {
+        auto& tower = m_objects.m_towers[i];
         tower.active = false;
         tower.gfx.oam = &oamMain;
         tower.gfx.oam_id = tower_oam_id_offset + i;
@@ -58,8 +55,8 @@ DefenceScene::DefenceScene(const level::Level& level)
                                         SpriteColorFormat_256Color);
     }
 
-    for (size_t i = 0; i < m_effects.size(); i++) {
-        auto& effect = m_effects[i];
+    for (size_t i = 0; i < m_objects.m_effects.size(); i++) {
+        auto& effect = m_objects.m_effects[i];
         effect.active = false;
         effect.gfx.oam = &oamMain;
         effect.gfx.oam_id = effects_oam_id_offset + i;
@@ -71,15 +68,15 @@ DefenceScene::DefenceScene(const level::Level& level)
 }
 
 DefenceScene::~DefenceScene() {
-    for (const auto& mail : m_mails) {
+    for (const auto& mail : m_objects.m_mails) {
         oamFreeGfx(mail.gfx.oam, mail.gfx.tile);
     }
 
-    for (const auto& tower : m_towers) {
+    for (const auto& tower : m_objects.m_towers) {
         oamFreeGfx(tower.gfx.oam, tower.gfx.tile);
     }
 
-    for (const auto& effect : m_effects) {
+    for (const auto& effect : m_objects.m_effects) {
         if (effect.gfx.tile != nullptr) {
             oamFreeGfx(effect.gfx.oam, effect.gfx.tile);
         }
@@ -89,17 +86,21 @@ DefenceScene::~DefenceScene() {
 void DefenceScene::update() {
     spawn_pending();
 
-    iprintf("Current Round %d\n", m_round_idx);
+    // iprintf("Current Round %d\n", m_round_idx);
 
     // Update collisions
     update_collisions<100>(m_collisions);
 
-    for (size_t i = 0; i < m_mails.size(); i++) {
-        update_mail(m_mails[i], i);
+    for (size_t i = 0; i < m_objects.m_mails.size(); i++) {
+        update_mail(m_objects.m_mails[i], i);
     }
 
-    for (size_t i = 0; i < m_towers.size(); i++) {
-        update_tower(m_towers[i], i);
+    for (size_t i = 0; i < m_objects.m_towers.size(); i++) {
+        update_tower(m_objects, m_objects.m_towers[i]);
+    }
+
+    for (size_t i = 0; i < m_objects.m_effects.size(); i++) {
+        update_effect(m_objects.m_effects[i]);
     }
 }
 
@@ -124,12 +125,8 @@ void DefenceScene::spawn_pending() {
     }
 }
 
-Mail& DefenceScene::get_free_mail() {
-    return get_free<Mail, 70>(m_mails, m_mail_idx, m_spare_mail);
-}
-
 Mail& DefenceScene::create_mail(const level::SpawnInfo& spawn_info) {
-    auto& mail = get_free_mail();
+    auto& mail = m_objects.get_free_mail();
 
     mail.postion = m_level.starting_point;
     mail.waypoint = Waypoint{
@@ -145,27 +142,27 @@ Mail& DefenceScene::create_mail(const level::SpawnInfo& spawn_info) {
         case level::MailType::INVALID:
         case level::MailType::BASIC_ENVELOPE:
             mail.speed = Fixed(0.4);
-            mail.life.maxHp = 1;
+            mail.life.maxHp = Fixed(1);
             tileOffset = 0;
             break;
         case level::MailType::OFFICIAL_ENVELOPE:
             mail.speed = Fixed(0.8);
-            mail.life.maxHp = 1;
+            mail.life.maxHp = Fixed(2);
             tileOffset = 1;
             break;
         case level::MailType::EXPRESS_ENVELOPE:
             mail.speed = Fixed(1.6);
-            mail.life.maxHp = 1;
+            mail.life.maxHp = Fixed(1);
             tileOffset = 2;
             break;
         case level::MailType::EXPRESS_OFFICIAL_ENVELOPE:
             mail.speed = Fixed(1.8);
-            mail.life.maxHp = 1;
+            mail.life.maxHp = Fixed(2);
             tileOffset = 3;
             break;
         case level::MailType::BASIC_PACKAGE:
             mail.speed = Fixed(0.3);
-            mail.life.maxHp = 1;
+            mail.life.maxHp = Fixed(5);
             tileOffset = 4;
             break;
     }
@@ -181,13 +178,18 @@ Mail& DefenceScene::create_mail(const level::SpawnInfo& spawn_info) {
 
 void DefenceScene::free_mail(sm::Mail& mail, int idx) {
     mail.active = false;
-    m_mail_idx = idx;
+    m_objects.m_mail_idx = idx;
     oamSetHidden(mail.gfx.oam, mail.gfx.oam_id, true);
     remove_collsion(&mail.collsion);
 }
 
 void DefenceScene::update_mail(sm::Mail& mail, int idx) {
     if (!mail.active) {
+        return;
+    }
+
+    if (mail.life.currentHp <= Fixed(0)) {
+        free_mail(mail, idx);
         return;
     }
 
@@ -208,7 +210,7 @@ void DefenceScene::update_mail(sm::Mail& mail, int idx) {
 }
 
 bool DefenceScene::any_mail_active() {
-    for (const auto& mail : m_mails) {
+    for (const auto& mail : m_objects.m_mails) {
         if (mail.active) {
             return true;
         }
@@ -218,7 +220,7 @@ bool DefenceScene::any_mail_active() {
 }
 
 Tower& DefenceScene::create_cat(Position pos, Position colPos) {
-    auto& tower = get_free_tower();
+    auto& tower = m_objects.get_free_tower();
     tower.active = true;
 
     auto tileOffset = 0;
@@ -228,6 +230,7 @@ Tower& DefenceScene::create_cat(Position pos, Position colPos) {
         Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
         Rectangle{.x = colPos.x, .y = colPos.y, .w = 16, .h = 16});
     add_collsion(&cat.col);
+    cat.current_cooldown = 0;
 
     tower.pos = pos;
     u8* offset = (u8*)towerSpritesheetTiles + (tileOffset * (16 * 16));
@@ -238,43 +241,8 @@ Tower& DefenceScene::create_cat(Position pos, Position colPos) {
 
 void DefenceScene::free_tower(sm::Tower& tower, int idx) {
     tower.active = false;
-    m_tower_idx = idx;
+    m_objects.m_tower_idx = idx;
     oamSetHidden(tower.gfx.oam, tower.gfx.oam_id, true);
-}
-
-#pragma GCC push_options
-#pragma GCC optimize("O0")
-
-void DefenceScene::update_tower(sm::Tower& tower, int idx) {
-    if (!tower.active) {
-        return;
-    }
-
-    update_oam(tower.pos, tower.gfx);
-
-    if (auto* cat = std::get_if<Cat>(&tower.specific); cat) {
-        for (size_t i = 0; i < cat->col.collisions.size(); i++) {
-            if (!cat->col.collisions[i]) {
-                break;
-            }
-            const auto& collider = cat->col.collisions[i]->object;
-            switch (collider.type) {
-                case Identity::Type::INVALID:
-                    break;
-                case Identity::Type::MAIL:
-                    break;
-                case Identity::Type::TOWER:
-                    break;
-            }
-        }
-
-        refresh_collision(cat->col);
-    }
-}
-#pragma GCC pop_options
-
-Tower& DefenceScene::get_free_tower() {
-    return get_free<Tower, 15>(m_towers, m_tower_idx, m_spare_tower);
 }
 
 void DefenceScene::add_collsion(Collsion* collsion) {

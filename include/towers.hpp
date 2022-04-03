@@ -1,5 +1,7 @@
 #pragma once
 
+#include <variant>
+
 #include "collision.hpp"
 #include "common.hpp"
 
@@ -10,7 +12,10 @@ enum class TowerType {
 };
 
 struct Cat {
+    const static int attack_cooldown = 30;
+
     Collsion col;
+    int current_cooldown;
 };
 
 struct Tower {

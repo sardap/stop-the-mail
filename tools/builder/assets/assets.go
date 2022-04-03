@@ -121,6 +121,16 @@ type MapOutput struct {
 }
 
 func (m *MapOutput) Generate(mapGenPath, assetsPath, targetPath string) {
+	if mapStat, err := os.Stat(mapGenPath); err == nil {
+		genFile := filepath.Join(targetPath, "generated", filepath.Base(strings.TrimSuffix(m.Path, filepath.Ext(m.Path))+".cpp"))
+		targetStat, err := os.Stat(genFile)
+		if err == nil && targetStat.ModTime().Before(mapStat.ModTime()) {
+			fmt.Printf("Map not changed %s\n", m.Path)
+			return
+		}
+
+	}
+
 	cmd := exec.Command(mapGenPath, targetPath, assetsPath, filepath.Join(assetsPath, m.Path))
 
 	var stdBuffer bytes.Buffer
@@ -128,7 +138,7 @@ func (m *MapOutput) Generate(mapGenPath, assetsPath, targetPath string) {
 	cmd.Stdout = mw
 	cmd.Stderr = mw
 
-	fmt.Printf("Building Map %s using %s %v\n", m.Path, mapGenPath, cmd.Args)
+	fmt.Printf("Building Map %s\n", m.Path)
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalf("Error building map %s %v", m.Path, err)

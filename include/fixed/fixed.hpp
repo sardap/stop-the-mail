@@ -76,7 +76,9 @@ class Fixed {
     }
 
     bool operator>(const Fixed<T>& other) const { return mVal > other.mVal; }
+    bool operator>=(const Fixed<T>& other) const { return mVal >= other.mVal; }
     bool operator<(const Fixed<T>& other) const { return mVal < other.mVal; }
+    bool operator<=(const Fixed<T>& other) const { return mVal <= other.mVal; }
     bool operator==(const Fixed<T>& other) const { return mVal == other.mVal; }
     bool operator!=(const Fixed<T>& other) const { return mVal != other.mVal; }
 

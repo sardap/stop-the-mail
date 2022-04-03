@@ -35,9 +35,9 @@ int main(int argc, char** argv) {
 
     auto scene = sm::DefenceScene(greenMapLevel);
 
-    iprintf("      Hello DS dev'rs\n");
-    iprintf("     \x1b[32mwww.devkitpro.org\n");
-    iprintf("   \x1b[32;1mwww.drunkencoders.com\x1b[39m");
+    // iprintf("      Hello DS dev'rs\n");
+    // iprintf("     \x1b[32mwww.devkitpro.org\n");
+    // iprintf("   \x1b[32;1mwww.drunkencoders.com\x1b[39m");
 
     while (1) {
         swiWaitForVBlank();
@@ -48,9 +48,10 @@ int main(int argc, char** argv) {
         scene.update();
 
         // print at using ansi escape sequence \x1b[line;columnH
-        iprintf("current frame:%ld\n", sm::globals::current_frame);
-        iprintf("\x1b[16;0HTouch x = %04X, %04X\n", touchXY.rawx, touchXY.px);
-        iprintf("Touch y = %04X, %04X\n", touchXY.rawy, touchXY.py);
+        // iprintf("current frame:%ld\n", sm::globals::current_frame);
+        // iprintf("\x1b[16;0HTouch x = %04X, %04X\n", touchXY.rawx,
+        // touchXY.px); iprintf("Touch y = %04X, %04X\n", touchXY.rawy,
+        // touchXY.py);
 
         oamUpdate(&oamMain);
     }

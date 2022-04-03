@@ -39,4 +39,6 @@ void update_oam(Position& pos, Graphics& graphics) {
         -1, false, false, false, false, false);
 }
 
+void apply_damage(Life& life, Fixed damage) { life.currentHp -= damage; }
+
 }  // namespace sm
