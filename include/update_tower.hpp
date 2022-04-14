@@ -1,13 +1,20 @@
 #pragma once
 
+#include <gfx/towerSpritesheet.h>
+
 #include <concepts>
 #include <container.hpp>
 
 namespace sm {
 
 template <IsContainer T>
-Tower& create_cat(T& container, Position pos, Position colPos) {
-    auto& tower = container.get_free_tower();
+Tower* create_cat(T& container, Position pos, Position colPos) {
+    auto* tower_ptr = container.get_free_tower();
+    if (tower_ptr == nullptr) {
+        return nullptr;
+    }
+    auto& tower = *tower_ptr;
+    assert(tower.active == false);
     tower.active = true;
 
     auto tileOffset = 0;
@@ -23,7 +30,7 @@ Tower& create_cat(T& container, Position pos, Position colPos) {
     u8* offset = (u8*)towerSpritesheetTiles + (tileOffset * (16 * 16));
     dmaCopy(offset, tower.gfx.tile, 16 * 16);
 
-    return tower;
+    return tower_ptr;
 }
 
 template <IsContainer T>
@@ -57,10 +64,12 @@ void update_tower(T& container, sm::Tower& tower) {
                     if (cat->current_cooldown <= 0) {
                         apply_damage(collider.mail->life, Fixed(1));
                         cat->current_cooldown = cat->attack_cooldown;
-                        auto& effect = container.get_free_effect();
-                        create_cat_attack_effect(
-                            effect, Position{.x = collider.mail->postion.x,
-                                             .y = collider.mail->postion.y});
+                        if (auto* effect = container.get_free_effect()) {
+                            create_cat_attack_effect(
+                                *effect,
+                                Position{.x = collider.mail->postion.x,
+                                         .y = collider.mail->postion.y});
+                        }
                     }
                     break;
                 case Identity::Type::TOWER:

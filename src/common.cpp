@@ -7,6 +7,10 @@ namespace sm {
 
 uint32 globals::current_frame = 0;
 
+touchPosition globals::touch_position = touchPosition{};
+
+touchPosition globals::last_touch_position = globals::touch_position;
+
 Fixed distance(const Position& l, const Position& r) {
     auto x1 = l.x;
     auto x2 = r.x;
@@ -36,7 +40,7 @@ void update_oam(Position& pos, Graphics& graphics) {
         // size
         SpriteSize_16x16, SpriteColorFormat_256Color,
         graphics.tile,  // the oam gfx
-        -1, false, false, false, false, false);
+        -1, false, !graphics.show, false, false, false);
 }
 
 void apply_damage(Life& life, Fixed damage) { life.currentHp -= damage; }

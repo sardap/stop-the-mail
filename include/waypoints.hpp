@@ -11,6 +11,7 @@ struct Waypoints {
     Position* points;
     size_t count;
 
+    Waypoints();
     Waypoints(std::initializer_list<Position> postions);
     ~Waypoints();
 

@@ -1,19 +1,49 @@
 [[Graphics]]
-name="defence secne"
+name="defence secne sub"
 options=[
-    "-fts",				# Create s file
-    "-m!",				# No Map
-    "-gB8",				# output 8bpp graphics
-    "-gT FF00FF",		# RGB 24 BIT
-    "-pS",				# Share pallet
-    "-Mh2",			    # output data as byte array
-    "-Mw2",         	# Shared pallet name
-    "-O defenceSceneShared"
+    "-fts",				    # Create s file
+    "-m!",				    # No Map
+    "-gB8",				    # output 8bpp graphics
+    "-gu8",                 # output as bytes
+    "-gT FF00FF",		    # RGB 24 BIT
+    "-pS",				    # Share pallet
+    "-Mh2",			        # output data as byte array
+    "-Mw2",         	
+    "-O defenceSceneSubShared" # Shared pallet name
 ]
 files=[
+    "gfx/defence/uiSprites",
     "gfx/defence/mailSpritesheet",
     "gfx/defence/towerSpritesheet",
 ]
 
+[[Graphics]]
+name="defence secne background main"
+options=[
+    "-fts",					# Create C file
+    "-gT FF00FF",			# RGB 24 BIT
+    "-gB8",					# Bit depth 8
+    "-gu8",					# export as bytes
+    "-gzl",                 # Compress
+    "-m",					# Export map
+    "-mR8",					# Create Map
+    "-mLf",					# Flat map
+    "-p",					# Share pallet
+    "-g",					# Share tiles
+]
+files=[
+    "gfx/defence/defenceStatsBackground",
+]
+
 [[Maps]]
 path="maps/greenMap.json"
+
+
+    # "-fts",				    # Create s file
+    # "-p",                   # output pal
+    # "-gT FF00FF",		    # RGB 24 BIT
+    # "-gu8",                 # output as bytes
+    # "-gzl",                 # llZ Compression
+    # "-m",					# Export map
+    # "-mR8",					# Create Map
+    # "-mLs",					# Map 16 Bit

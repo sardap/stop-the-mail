@@ -10,11 +10,13 @@ struct TimedEffect {
     int remaning_frames;
 };
 
+struct StaticEffect {};
+
 struct Effect {
     bool active;
     Position pos;
     Graphics gfx;
-    std::variant<TimedEffect> specific;
+    std::variant<TimedEffect, StaticEffect> specific;
 };
 
 void create_cat_attack_effect(Effect& effect, Position pos);

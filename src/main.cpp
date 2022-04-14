@@ -31,9 +31,9 @@ void init() {
 int main(int argc, char** argv) {
     init();
 
-    touchPosition touchXY;
-
-    auto scene = sm::DefenceScene(greenMapLevel);
+    auto scene = sm::DefenceScene();
+    sm::SceneArgs args = sm::DefenceSceneArgs{.level = greenMapLevel};
+    scene.load(args);
 
     // iprintf("      Hello DS dev'rs\n");
     // iprintf("     \x1b[32mwww.devkitpro.org\n");
@@ -42,8 +42,8 @@ int main(int argc, char** argv) {
     while (1) {
         swiWaitForVBlank();
         sm::globals::current_frame++;
-
-        touchRead(&touchXY);
+        sm::globals::last_touch_position = sm::globals::touch_position;
+        touchRead(&sm::globals::touch_position);
 
         scene.update();
 
@@ -52,8 +52,6 @@ int main(int argc, char** argv) {
         // iprintf("\x1b[16;0HTouch x = %04X, %04X\n", touchXY.rawx,
         // touchXY.px); iprintf("Touch y = %04X, %04X\n", touchXY.rawy,
         // touchXY.py);
-
-        oamUpdate(&oamMain);
     }
 
     return 0;

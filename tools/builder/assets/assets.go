@@ -260,6 +260,7 @@ func gritCall(ctx context.Context, assetsPath, targetPath string, target *Graphi
 		arguments = append(arguments, strings.Split(option, " ")...)
 	}
 
+	fmt.Printf("Calling grit %v\n", arguments)
 	cmd := exec.CommandContext(ctx, "grit", arguments...)
 
 	var stdBuffer bytes.Buffer

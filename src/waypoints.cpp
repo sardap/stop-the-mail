@@ -6,6 +6,8 @@
 
 namespace sm {
 
+Waypoints::Waypoints() : Waypoints({}) {}
+
 Waypoints::Waypoints(std::initializer_list<Position> postions) {
     // Maybe use a normal array here
     points = new Position[postions.size()];

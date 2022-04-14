@@ -6,14 +6,18 @@
 #include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
+#include "scene.hpp"
 #include "towers.hpp"
 
 namespace sm {
 
 class DefenceScene {
    public:
-    DefenceScene(const level::Level& level);
+    DefenceScene();
     ~DefenceScene();
+
+    void load(SceneArgs args);
+    void free();
 
     void update();
 
@@ -24,25 +28,21 @@ class DefenceScene {
 
     Container<70, 15, 30> m_objects;
 
+    enum class InputState { SELECT, CREATE_PRESSED, CREATE };
+
+    InputState m_input_state;
+    Effect* m_cursor;
+    int m_cursor_timeout;
+
+    Effect* m_building_icon;
+
+    void init_ui_elements();
+
+    Tower* overlaps_with_tower(Rectangle& given);
     void spawn_pending();
-
-    template <typename T, size_t N>
-    T& get_free(std::array<T, N>& source, size_t& idx, T& spare) {
-        for (size_t i = 0; i < source.size(); i++) {
-            if (auto& result = source[idx]; !result.active) {
-                idx++;
-                return result;
-            }
-            idx++;
-            if (idx >= source.size()) {
-                idx = 0;
-            }
-        }
-
-        return spare;
-    }
-
     bool any_mail_active();
+    void process_player_input();
+    void ui_update();
 };
 
 }  // namespace sm

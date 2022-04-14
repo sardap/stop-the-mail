@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gfx/mailSpritesheet.h>
+
 #include <container.hpp>
 #include <enemies.hpp>
 #include <level.hpp>
@@ -7,9 +9,13 @@
 namespace sm {
 
 template <IsContainer T>
-Mail& create_mail(T& container, const level::Level& level,
+Mail* create_mail(T& container, const level::Level& level,
                   const level::SpawnInfo& spawn_info) {
-    auto& mail = container.get_free_mail();
+    auto* mail_ptr = container.get_free_mail();
+    if (mail_ptr == nullptr) {
+        return mail_ptr;
+    }
+    auto& mail = *mail_ptr;
 
     mail.postion = level.starting_point;
     mail.waypoint = Waypoint{
@@ -56,7 +62,7 @@ Mail& create_mail(T& container, const level::Level& level,
     container.add_collsion(&mail.collsion);
     step_mail_collsion(mail);
 
-    return mail;
+    return mail_ptr;
 }
 
 template <IsContainer T>

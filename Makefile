@@ -21,13 +21,14 @@ SOURCES		:=	gfx src data src/generated build/generated build/gfx
 INCLUDES	:=	include build
 
 CPP_VERSION = 20
+OPTIMIZATION_LEVEL = O0
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -$(OPTIMIZATION_LEVEL)\
  			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math \
 			$(ARCH)

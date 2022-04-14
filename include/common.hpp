@@ -12,7 +12,10 @@ namespace globals {
 
 extern uint32 current_frame;
 
-}
+extern touchPosition touch_position;
+extern touchPosition last_touch_position;
+
+}  // namespace globals
 
 using Fixed = math::Fixed<int32>;
 
@@ -36,6 +39,7 @@ struct Graphics {
     u16* tile;
     OamState* oam;
     int oam_id;
+    bool show{true};
 
     ~Graphics();
 };
