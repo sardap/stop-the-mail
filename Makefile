@@ -33,7 +33,7 @@ CFLAGS	:=	-g -Wall -$(OPTIMIZATION_LEVEL)\
 			-ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM9
+CFLAGS	+=	$(INCLUDE) -DARM9 -DFMT_HEADER_ONLY
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions \
 	-std=c++$(CPP_VERSION)
 

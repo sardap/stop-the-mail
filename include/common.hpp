@@ -39,7 +39,9 @@ struct Graphics {
     u16* tile;
     OamState* oam;
     int oam_id;
-    bool show{true};
+    bool show;
+    SpriteSize size;
+    SpriteColorFormat colorFormat;
 
     ~Graphics();
 };
@@ -59,5 +61,17 @@ struct Life {
 };
 
 void apply_damage(Life& life, Fixed damage);
+
+struct TextInfo {
+    OamState* oam;
+    size_t oam_offset;
+    size_t oam_count;
+    u16* sheet_offset;
+};
+
+struct TextGroup {
+    size_t start;
+    size_t count;
+};
 
 }  // namespace sm

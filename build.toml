@@ -35,6 +35,24 @@ files=[
     "gfx/defence/defenceStatsBackground",
 ]
 
+[[Graphics]]
+name="defence secne sprites main"
+options=[
+    "-fts",				    # Create s file
+    "-m!",				    # No Map
+    "-gB8",				    # output 8bpp graphics
+    "-gu8",                 # output as bytes
+    "-gT FF00FF",		    # RGB 24 BIT
+    "-pS",				    # Share pallet
+    "-Mh2",			        # output data as byte array
+    "-Mw2",         	
+    "-O defenceSceneMainShared" # Shared pallet name
+]
+files=[
+    "gfx/font/dsBasic",
+]
+
+
 [[Maps]]
 path="maps/greenMap.json"
 

@@ -85,6 +85,7 @@ void update_mail(T& container, sm::Mail& mail, size_t idx) {
 
     waypoint_update(mail.waypoint, mail.vel, mail.postion, mail.speed);
     if (mail.waypoint.current_waypoint_idx >= mail.waypoint.waypoints->count) {
+        // Add damage using bullten board
         free_mail(container, mail, idx);
         return;
     }

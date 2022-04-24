@@ -9,6 +9,7 @@ template <typename T>
 class Fixed {
    public:
     Fixed(int val) : mVal(inttof32(val)) {}
+    Fixed(size_t val) : mVal(inttof32(val)) {}
     Fixed(int32 val) : mVal(inttof32(val)) {}
     Fixed(float val) : mVal(floattof32(val)) {}
     Fixed(double val) : Fixed(static_cast<float>(val)) {}

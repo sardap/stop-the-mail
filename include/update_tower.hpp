@@ -16,6 +16,7 @@ Tower* create_cat(T& container, Position pos, Position colPos) {
     auto& tower = *tower_ptr;
     assert(tower.active == false);
     tower.active = true;
+    tower.damage_dealt = 0;
 
     auto tileOffset = 0;
     Cat& cat = std::get<Cat>(tower.specific);
@@ -63,6 +64,7 @@ void update_tower(T& container, sm::Tower& tower) {
                 case Identity::Type::MAIL:
                     if (cat->current_cooldown <= 0) {
                         apply_damage(collider.mail->life, Fixed(1));
+                        tower.damage_dealt++;
                         cat->current_cooldown = cat->attack_cooldown;
                         if (auto* effect = container.get_free_effect()) {
                             create_cat_attack_effect(

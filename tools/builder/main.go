@@ -63,6 +63,8 @@ func main() {
 
 		fmt.Printf("Assets: %s Target: %s\n", assetsPath, targetPath)
 
+		downloadFmt(filepath.Join(buildPath, "include"))
+
 		if _, err := os.Stat(assetsPath); err != nil {
 			panic(err)
 		}

@@ -23,6 +23,7 @@ struct Tower {
     Graphics gfx;
     std::variant<Cat> specific;
     bool active;
+    int damage_dealt;
 };
 
 }  // namespace sm
