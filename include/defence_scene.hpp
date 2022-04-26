@@ -2,17 +2,24 @@
 
 #include <array>
 
+#include "bulletin_board.hpp"
+#include "container.hpp"
 #include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
+#include "player.hpp"
+#include "scene.hpp"
 #include "towers.hpp"
 
 namespace sm {
 
 class DefenceScene {
    public:
-    DefenceScene(const level::Level& level);
+    DefenceScene();
     ~DefenceScene();
+
+    void load(SceneArgs args);
+    void free();
 
     void update();
 
@@ -20,53 +27,41 @@ class DefenceScene {
     level::Level m_level;
     size_t m_round_idx;
     size_t m_spawn_idx;
+    BulletinBoard m_board;
+    Player m_player;
+    int m_money;
 
-    size_t m_mail_idx;
-    std::array<Mail, 70> m_mails;
-    Mail m_spare_mail;
+    Container<0, 0, 0, 0> m_main_objects;
+    Container<70, 15, 30, 100> m_sub_objects;
 
-    size_t m_tower_idx;
-    std::array<Tower, 15> m_towers;
-    Tower m_spare_tower;
+    enum class InputState { SELECT, CREATE_PRESSED, CREATE };
 
-    size_t m_effect_idx;
-    std::array<Effect, 30> m_effects;
-    Effect m_spare_effect;
+    InputState m_input_state;
+    Effect* m_cursor;
+    int m_cursor_timeout;
 
-    std::array<Collsion*, 100> m_collisions;
+    Effect* m_building_icon;
 
+    struct MSGeneral {
+        TextGroup lives_text;
+        TextGroup round_text;
+        TextGroup money_text;
+    };
+    struct MSTowerStats {
+        Tower* tower;
+    };
+    std::variant<MSGeneral, MSTowerStats> m_ms_state;
+
+    void init_ui_elements();
+
+    Tower* overlaps_with_tower(Rectangle& given);
     void spawn_pending();
-
-    template <typename T, size_t N>
-    T& get_free(std::array<T, N>& source, size_t& idx, T& spare) {
-        for (size_t i = 0; i < source.size(); i++) {
-            if (auto& result = source[idx]; !result.active) {
-                idx++;
-                return result;
-            }
-            idx++;
-            if (idx >= source.size()) {
-                idx = 0;
-            }
-        }
-
-        return spare;
-    }
-
-    Mail& create_mail(const level::SpawnInfo& spawn_info);
-    void free_mail(sm::Mail& mail, int idx);
-    void update_mail(sm::Mail& mail, int idx);
-    Mail& get_free_mail();
     bool any_mail_active();
+    void process_player_input();
 
-    Tower& create_cat(Position pos, Position colPos);
-
-    void free_tower(sm::Tower& mail, int idx);
-    void update_tower(sm::Tower& mail, int idx);
-    Tower& get_free_tower();
-
-    void add_collsion(Collsion* collsion);
-    void remove_collsion(Collsion* collsion);
+    void ui_change_general();
+    void ui_cleanup();
+    void ui_update();
 };
 
 }  // namespace sm

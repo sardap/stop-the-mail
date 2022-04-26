@@ -31,28 +31,27 @@ void init() {
 int main(int argc, char** argv) {
     init();
 
-    touchPosition touchXY;
+    auto scene = sm::DefenceScene();
+    sm::SceneArgs args = sm::DefenceSceneArgs{.level = greenMapLevel};
+    scene.load(args);
 
-    auto scene = sm::DefenceScene(greenMapLevel);
-
-    iprintf("      Hello DS dev'rs\n");
-    iprintf("     \x1b[32mwww.devkitpro.org\n");
-    iprintf("   \x1b[32;1mwww.drunkencoders.com\x1b[39m");
+    // iprintf("      Hello DS dev'rs\n");
+    // iprintf("     \x1b[32mwww.devkitpro.org\n");
+    // iprintf("   \x1b[32;1mwww.drunkencoders.com\x1b[39m");
 
     while (1) {
         swiWaitForVBlank();
         sm::globals::current_frame++;
-
-        touchRead(&touchXY);
+        sm::globals::last_touch_position = sm::globals::touch_position;
+        touchRead(&sm::globals::touch_position);
 
         scene.update();
 
         // print at using ansi escape sequence \x1b[line;columnH
-        iprintf("current frame:%ld\n", sm::globals::current_frame);
-        iprintf("\x1b[16;0HTouch x = %04X, %04X\n", touchXY.rawx, touchXY.px);
-        iprintf("Touch y = %04X, %04X\n", touchXY.rawy, touchXY.py);
-
-        oamUpdate(&oamMain);
+        // iprintf("current frame:%ld\n", sm::globals::current_frame);
+        // iprintf("\x1b[16;0HTouch x = %04X, %04X\n", touchXY.rawx,
+        // touchXY.px); iprintf("Touch y = %04X, %04X\n", touchXY.rawy,
+        // touchXY.py);
     }
 
     return 0;

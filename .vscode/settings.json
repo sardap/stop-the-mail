@@ -56,7 +56,8 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "bitset": "cpp"
     },
     "editor.formatOnSave": true,
     "C_Cpp.errorSquiggles": "Disabled"

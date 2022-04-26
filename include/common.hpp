@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #include <nds.h>
 #include <nds/ndstypes.h>
 
@@ -12,7 +13,10 @@ namespace globals {
 
 extern uint32 current_frame;
 
-}
+extern touchPosition touch_position;
+extern touchPosition last_touch_position;
+
+}  // namespace globals
 
 using Fixed = math::Fixed<int32>;
 
@@ -23,7 +27,14 @@ struct Position {
     Fixed y;
 };
 
-Fixed distance(const Position& l, const Position& r);
+inline Fixed distance(const Position& l, const Position& r) {
+    auto x1 = l.x;
+    auto x2 = r.x;
+    auto y1 = l.y;
+    auto y2 = r.y;
+
+    return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
 
 struct Vel {
     Fixed vx;
@@ -36,6 +47,9 @@ struct Graphics {
     u16* tile;
     OamState* oam;
     int oam_id;
+    bool show;
+    SpriteSize size;
+    SpriteColorFormat colorFormat;
 
     ~Graphics();
 };
@@ -50,8 +64,22 @@ struct Rectangle {
 };
 
 struct Life {
-    int maxHp;
-    int currentHp;
+    Fixed maxHp;
+    Fixed currentHp;
+};
+
+void apply_damage(Life& life, Fixed damage);
+
+struct TextInfo {
+    OamState* oam;
+    size_t oam_offset;
+    size_t oam_count;
+    u16* sheet_offset;
+};
+
+struct TextGroup {
+    size_t start;
+    size_t count;
 };
 
 }  // namespace sm

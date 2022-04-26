@@ -145,7 +145,6 @@ func (w *Window) Update() error {
 					break
 				}
 			}
-
 		}
 	case ModePathWaiting:
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -158,6 +157,14 @@ func (w *Window) Update() error {
 				if maker.PointInRect(x, y, path.AsRect()) {
 					w.selected = &w.Paths[i]
 					w.Mode = ModeMoving
+					break
+				}
+			}
+		}
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonMiddle) {
+			for i, path := range w.Paths {
+				if maker.PointInRect(x, y, path.AsRect()) {
+					w.Paths = append(w.Paths[:i], w.Paths[i+1:]...)
 					break
 				}
 			}

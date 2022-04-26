@@ -20,18 +20,22 @@ BUILD		:=	build
 SOURCES		:=	gfx src data src/generated build/generated build/gfx
 INCLUDES	:=	include build
 
+CPP_VERSION = 20
+OPTIMIZATION_LEVEL = O0
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -$(OPTIMIZATION_LEVEL)\
  			-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 			-ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM9
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
+CFLAGS	+=	$(INCLUDE) -DARM9 -DFMT_HEADER_ONLY
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions \
+	-std=c++$(CPP_VERSION)
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)

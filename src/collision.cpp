@@ -28,11 +28,10 @@ void setup_collision(Collsion &collsion, Collsion::Collider owner,
 }
 
 void refresh_collision(Collsion &collsion) {
-    if (collsion.collisions_top >= collsion.collisions.size()) {
-        collsion.collisions_top = collsion.collisions.size() - 1;
-    }
-
-    for (size_t i = collsion.collisions_top; i > 0; i--) {
+    for (size_t i = 0; i < collsion.collisions.size(); i++) {
+        if (collsion.collisions[i] == std::nullopt) {
+            break;
+        }
         collsion.collisions[i] = std::nullopt;
     }
     collsion.collisions_top = 0;
