@@ -2,9 +2,11 @@
 
 #include <gfx/mailSpritesheet.h>
 
-#include <container.hpp>
-#include <enemies.hpp>
-#include <level.hpp>
+#include "bulletin_board.hpp"
+#include "common.hpp"
+#include "container.hpp"
+#include "enemies.hpp"
+#include "level.hpp"
 
 namespace sm {
 
@@ -66,27 +68,27 @@ Mail* create_mail(T& container, const level::Level& level,
 }
 
 template <IsContainer T>
-void free_mail(T& container, sm::Mail& mail, size_t idx) {
-    container.free_mail(mail, idx);
+void free_mail(T& container, Mail& mail) {
+    container.free_mail(mail);
     oamSetHidden(mail.gfx.oam, mail.gfx.oam_id, true);
     container.remove_collsion(&mail.collsion);
 }
 
 template <IsContainer T>
-void update_mail(T& container, sm::Mail& mail, size_t idx) {
+void update_mail(Mail& mail, BulletinBoard& board, T& container) {
     if (!mail.active) {
         return;
     }
 
     if (mail.life.currentHp <= Fixed(0)) {
-        free_mail(container, mail, idx);
+        free_mail(container, mail);
         return;
     }
 
     waypoint_update(mail.waypoint, mail.vel, mail.postion, mail.speed);
     if (mail.waypoint.current_waypoint_idx >= mail.waypoint.waypoints->count) {
-        // Add damage using bullten board
-        free_mail(container, mail, idx);
+        free_mail(container, mail);
+        board.mail_delivered += static_cast<int>(mail.life.currentHp);
         return;
     }
     postion_update(mail.postion, mail.vel);

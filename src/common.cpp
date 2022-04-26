@@ -11,15 +11,6 @@ touchPosition globals::touch_position = touchPosition{};
 
 touchPosition globals::last_touch_position = globals::touch_position;
 
-Fixed distance(const Position& l, const Position& r) {
-    auto x1 = l.x;
-    auto x2 = r.x;
-    auto y1 = l.y;
-    auto y2 = r.y;
-
-    return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-}
-
 void postion_update(Position& pos, const Vel& vel) {
     pos.x += vel.vx;
     pos.y += vel.vy;

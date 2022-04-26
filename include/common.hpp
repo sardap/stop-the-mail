@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #include <nds.h>
 #include <nds/ndstypes.h>
 
@@ -26,7 +27,14 @@ struct Position {
     Fixed y;
 };
 
-Fixed distance(const Position& l, const Position& r);
+inline Fixed distance(const Position& l, const Position& r) {
+    auto x1 = l.x;
+    auto x2 = r.x;
+    auto y1 = l.y;
+    auto y2 = r.y;
+
+    return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
 
 struct Vel {
     Fixed vx;

@@ -2,10 +2,12 @@
 
 #include <array>
 
+#include "bulletin_board.hpp"
 #include "container.hpp"
 #include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
+#include "player.hpp"
 #include "scene.hpp"
 #include "towers.hpp"
 
@@ -25,7 +27,8 @@ class DefenceScene {
     level::Level m_level;
     size_t m_round_idx;
     size_t m_spawn_idx;
-    int m_lives;
+    BulletinBoard m_board;
+    Player m_player;
     int m_money;
 
     Container<0, 0, 0, 0> m_main_objects;

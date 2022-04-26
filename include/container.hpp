@@ -15,7 +15,7 @@ concept IsContainer = requires(T c, size_t i, Mail& m, Tower& t, Effect& e,
                                Collsion* col, size_t length,
                                const TextGroup& tg) {
     { c.get_free_mail() } -> std::convertible_to<Mail*>;
-    c.free_mail(m, i);
+    c.free_mail(m);
 
     { c.get_free_effect() } -> std::convertible_to<Effect*>;
     c.free_effect(e, i);
@@ -81,7 +81,7 @@ class Container {
     TextInfo m_text_info;
 
     Mail* get_free_mail() { return get_free(m_mails); }
-    void free_mail(Mail& m, size_t i) { free_resource(m, i); }
+    void free_mail(Mail& m) { free_resource(m, -1); }
 
     Tower* get_free_tower() { return get_free(m_towers); }
     void free_tower(Tower& t, size_t i) { free_resource(t, i); }

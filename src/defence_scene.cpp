@@ -10,6 +10,7 @@
 #include <defence_scene.hpp>
 #include <text_system.hpp>
 #include <update_mail.hpp>
+#include <update_player.hpp>
 #include <update_tower.hpp>
 
 namespace sm {
@@ -34,8 +35,10 @@ void DefenceScene::load(SceneArgs args) {
     m_spawn_idx = 0;
     m_cursor_timeout = 0;
     m_input_state = InputState::SELECT;
-    m_lives = 100;
+    m_player =
+        Player{.life = Life{.maxHp = Fixed(100), .currentHp = Fixed(100)}};
     m_money = 300;
+    m_board.reset();
 
     // Main
     {
@@ -138,7 +141,7 @@ void DefenceScene::update() {
     update_collisions<100>(m_sub_objects.m_collisions);
 
     for (size_t i = 0; i < m_sub_objects.m_mails.size(); i++) {
-        update_mail(m_sub_objects, m_sub_objects.m_mails[i], i);
+        update_mail(m_sub_objects.m_mails[i], m_board, m_sub_objects);
     }
 
     for (size_t i = 0; i < m_sub_objects.m_towers.size(); i++) {
@@ -152,9 +155,12 @@ void DefenceScene::update() {
     scanKeys();
     process_player_input();
     ui_update();
+    update_player(m_player, m_board);
 
     oamUpdate(&oamMain);
     oamUpdate(&oamSub);
+
+    m_board.reset();
 }
 
 void DefenceScene::init_ui_elements() {
@@ -296,10 +302,11 @@ void DefenceScene::ui_change_general() {
 }
 
 void DefenceScene::ui_update() {
-    if (auto* basic = std::get_if<MSGeneral>(&m_ms_state)) {
-        set_text(m_main_objects.m_text_info, basic->lives_text,
-                 fmt::format("Lives: {}", m_lives),
-                 Position{.x = Fixed(40), .y = Fixed(30)});
+        if (auto* basic = std::get_if<MSGeneral>(&m_ms_state)) {
+        set_text(
+            m_main_objects.m_text_info, basic->lives_text,
+            fmt::format("Lives: {}", static_cast<int>(m_player.life.currentHp)),
+            Position{.x = Fixed(40), .y = Fixed(30)});
         set_text(m_main_objects.m_text_info, basic->round_text,
                  fmt::format("Round: {}", m_round_idx + 1),
                  Position{.x = Fixed(40), .y = Fixed(42)});
