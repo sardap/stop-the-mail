@@ -1,5 +1,5 @@
 [[Graphics]]
-name="defence secne sub"
+name="defence scene sub"
 options=[
     "-fts",				    # Create s file
     "-m!",				    # No Map
@@ -18,7 +18,25 @@ files=[
 ]
 
 [[Graphics]]
-name="defence secne background main"
+name="defence scene sub background"
+options=[
+    "-fts",					# Create C file
+    "-gT FF00FF",			# RGB 24 BIT
+    "-gB8",					# Bit depth 8
+    "-gu8",					# export as bytes
+    "-gzl",                 # Compress
+    "-m",					# Export map
+    "-mR8",					# Create Map
+    "-mLf",					# Flat map
+    "-p",					# Share pallet
+    "-g",					# Share tiles
+]
+files=[
+    "gfx/defence/defenceMenu",
+]
+
+[[Graphics]]
+name="defence scene background main"
 options=[
     "-fts",					# Create C file
     "-gT FF00FF",			# RGB 24 BIT
@@ -36,7 +54,7 @@ files=[
 ]
 
 [[Graphics]]
-name="defence secne sprites main"
+name="defence scene sprites main"
 options=[
     "-fts",				    # Create s file
     "-m!",				    # No Map

@@ -1,4 +1,5 @@
 #include <fmt/format.h>
+#include <gfx/defenceMenu.h>
 #include <gfx/defenceSceneMainShared.h>
 #include <gfx/defenceSceneSubShared.h>
 #include <gfx/defenceStatsBackground.h>
@@ -7,6 +8,7 @@
 #include <stdio.h>
 
 #include <common.hpp>
+#include <create_tower.hpp>
 #include <defence_scene.hpp>
 #include <text_system.hpp>
 #include <update_mail.hpp>
@@ -14,6 +16,38 @@
 #include <update_tower.hpp>
 
 namespace sm {
+
+using MO = DefenceScene::MainObjects;
+
+static const CreateTowerMenu<MO> m_tower_menu = {
+    .entires =
+        {
+            CreateTowerItem<MO>{.cost = 100, .func = create_cat<MO>},
+            CreateTowerItem<MO>{.cost = 200, .func = create_begal<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+            CreateTowerItem<MO>{.cost = 0, .func = create_blank<MO>},
+        },
+};
 
 static const int mail_oam_id_offset = 127 - 70;
 static const int tower_oam_id_offset = mail_oam_id_offset - 15;
@@ -40,31 +74,28 @@ void DefenceScene::load(SceneArgs args) {
     m_money = 300;
     m_board.reset();
 
+    lcdMainOnBottom();
+
     // Main
     {
-        videoSetMode(MODE_0_2D);
-        vramSetBankA(VRAM_A_MAIN_BG);
+        videoSetMode(MODE_5_2D);
 
-        int bg = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 0, 1);
-        decompress(defenceStatsBackgroundTiles, bgGetGfxPtr(bg), LZ77Vram);
-        dmaCopy(defenceStatsBackgroundMap, bgGetMapPtr(bg),
-                defenceStatsBackgroundMapLen);
-        dmaCopy(defenceStatsBackgroundPal, BG_PALETTE,
-                defenceStatsBackgroundPalLen);
+        vramSetBankA(VRAM_A_MAIN_BG);
+        m_menu_bg = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 4, 0);
+        decompress(defenceMenuTiles, bgGetGfxPtr(m_menu_bg), LZ77Vram);
+        dmaCopy(defenceMenuMap, bgGetMapPtr(m_menu_bg), defenceMenuMapLen);
+        dmaCopy(defenceMenuPal, BG_PALETTE, defenceMenuPalLen);
+        bgHide(m_menu_bg);
+
+        vramSetBankD(VRAM_D_MAIN_BG);
+        int bg2 = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 1, 0);
+        decompress(m_level.background.bitmap, bgGetGfxPtr(bg2), LZ77Vram);
 
         vramSetBankB(VRAM_B_MAIN_SPRITE);
         oamInit(&oamMain, SpriteMapping_1D_128, false);
 
-        m_main_objects.m_text_info.oam = &oamMain;
-        m_main_objects.m_text_info.oam_offset = 0;
-        m_main_objects.m_text_info.oam_count = 40;
-        m_main_objects.m_text_info.sheet_offset = nullptr;
-        init_text(m_main_objects.m_text_info);
-
-        dmaCopy(defenceSceneMainSharedPal, SPRITE_PALETTE,
-                defenceSceneMainSharedPalLen);
-
-        ui_change_general();
+        dmaCopy(defenceSceneSubSharedPal, SPRITE_PALETTE,
+                defenceSceneSubSharedPalLen);
     }
 
     // Sub Screen
@@ -72,19 +103,33 @@ void DefenceScene::load(SceneArgs args) {
         videoSetModeSub(MODE_5_2D);
 
         vramSetBankC(VRAM_C_SUB_BG);
-        int bg = bgInitSub(3, BgType_Bmp16, BgSize_B16_256x256, 0, 0);
-        decompress(m_level.background.bitmap, bgGetGfxPtr(bg), LZ77Vram);
 
-        vramSetBankD(VRAM_D_SUB_SPRITE);
+        int bg = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 0, 1);
+        decompress(defenceStatsBackgroundTiles, bgGetGfxPtr(bg), LZ77Vram);
+        dmaCopy(defenceStatsBackgroundMap, bgGetMapPtr(bg),
+                defenceStatsBackgroundMapLen);
+        dmaCopy(defenceStatsBackgroundPal, BG_PALETTE_SUB,
+                defenceStatsBackgroundPalLen);
+
+        vramSetBankI(VRAM_I_SUB_SPRITE);
         oamInit(&oamSub, SpriteMapping_1D_128, false);
-        dmaCopy(defenceSceneSubSharedPal, SPRITE_PALETTE_SUB,
-                defenceSceneSubSharedPalLen);
+
+        m_sub_objects.m_text_info.oam = &oamSub;
+        m_sub_objects.m_text_info.oam_offset = 0;
+        m_sub_objects.m_text_info.oam_count = 40;
+        m_sub_objects.m_text_info.sheet_offset = nullptr;
+        init_text(m_sub_objects.m_text_info);
+
+        dmaCopy(defenceSceneMainSharedPal, SPRITE_PALETTE_SUB,
+                defenceSceneMainSharedPalLen);
+
+        ui_change_general();
     }
 
-    auto* oam = &oamSub;
+    auto* oam = &oamMain;
     // Logic
-    for (size_t i = 0; i < m_sub_objects.m_mails.size(); i++) {
-        auto& mail = m_sub_objects.m_mails[i];
+    for (size_t i = 0; i < m_main_objects.m_mails.size(); i++) {
+        auto& mail = m_main_objects.m_mails[i];
         mail.active = false;
         mail.gfx.oam = oam;
         mail.gfx.oam_id = mail_oam_id_offset + i;
@@ -96,8 +141,8 @@ void DefenceScene::load(SceneArgs args) {
         mail.gfx.show = true;
     }
 
-    for (size_t i = 0; i < m_sub_objects.m_towers.size(); i++) {
-        auto& tower = m_sub_objects.m_towers[i];
+    for (size_t i = 0; i < m_main_objects.m_towers.size(); i++) {
+        auto& tower = m_main_objects.m_towers[i];
         tower.active = false;
         tower.gfx.oam = oam;
         tower.gfx.oam_id = tower_oam_id_offset + i;
@@ -106,8 +151,8 @@ void DefenceScene::load(SceneArgs args) {
         tower.gfx.show = true;
     }
 
-    for (size_t i = 0; i < m_sub_objects.m_effects.size(); i++) {
-        auto& effect = m_sub_objects.m_effects[i];
+    for (size_t i = 0; i < m_main_objects.m_effects.size(); i++) {
+        auto& effect = m_main_objects.m_effects[i];
         effect.active = false;
         effect.gfx.oam = oam;
         effect.gfx.oam_id = effects_oam_id_offset + i;
@@ -119,15 +164,15 @@ void DefenceScene::load(SceneArgs args) {
 }
 
 void DefenceScene::free() {
-    for (const auto& mail : m_sub_objects.m_mails) {
+    for (const auto& mail : m_main_objects.m_mails) {
         oamFreeGfx(mail.gfx.oam, mail.gfx.tile);
     }
 
-    for (const auto& tower : m_sub_objects.m_towers) {
+    for (const auto& tower : m_main_objects.m_towers) {
         oamFreeGfx(tower.gfx.oam, tower.gfx.tile);
     }
 
-    for (const auto& effect : m_sub_objects.m_effects) {
+    for (const auto& effect : m_main_objects.m_effects) {
         if (effect.gfx.tile != nullptr) {
             oamFreeGfx(effect.gfx.oam, effect.gfx.tile);
         }
@@ -138,18 +183,18 @@ void DefenceScene::update() {
     spawn_pending();
 
     // Update collisions
-    update_collisions<100>(m_sub_objects.m_collisions);
+    update_collisions<100>(m_main_objects.m_collisions);
 
-    for (size_t i = 0; i < m_sub_objects.m_mails.size(); i++) {
-        update_mail(m_sub_objects.m_mails[i], m_board, m_sub_objects);
+    for (size_t i = 0; i < m_main_objects.m_mails.size(); i++) {
+        update_mail(m_main_objects.m_mails[i], m_board, m_main_objects);
     }
 
-    for (size_t i = 0; i < m_sub_objects.m_towers.size(); i++) {
-        update_tower(m_sub_objects, m_sub_objects.m_towers[i]);
+    for (size_t i = 0; i < m_main_objects.m_towers.size(); i++) {
+        update_tower(m_main_objects, m_main_objects.m_towers[i]);
     }
 
-    for (size_t i = 0; i < m_sub_objects.m_effects.size(); i++) {
-        update_effect(m_sub_objects.m_effects[i]);
+    for (size_t i = 0; i < m_main_objects.m_effects.size(); i++) {
+        update_effect(m_main_objects.m_effects[i]);
     }
 
     scanKeys();
@@ -166,7 +211,7 @@ void DefenceScene::update() {
 void DefenceScene::init_ui_elements() {
     // Sub Screen
     {
-        m_cursor = m_sub_objects.get_free_effect();
+        m_cursor = m_main_objects.get_free_effect();
         m_cursor->active = true;
         m_cursor->gfx.tile = oamAllocateGfx(m_cursor->gfx.oam, SpriteSize_16x16,
                                             SpriteColorFormat_256Color);
@@ -175,10 +220,11 @@ void DefenceScene::init_ui_elements() {
         m_cursor->specific = StaticEffect{};
         u8* offset = (u8*)uiSpritesTiles + (0 * (16 * 16));
         dmaCopy(offset, m_cursor->gfx.tile, 16 * 16);
-    }  // namespace sm
+    }
 
+    // Main Screen
     {
-        m_building_icon = m_sub_objects.get_free_effect();
+        m_building_icon = m_main_objects.get_free_effect();
         m_building_icon->active = true;
         m_building_icon->gfx.tile =
             oamAllocateGfx(m_building_icon->gfx.oam, SpriteSize_16x16,
@@ -190,18 +236,16 @@ void DefenceScene::init_ui_elements() {
         u8* offset = (u8*)uiSpritesTiles + (1 * (16 * 16));
         dmaCopy(offset, m_building_icon->gfx.tile, 16 * 16);
     }
-
-    // Main Screen
 }
 
 Tower* DefenceScene::overlaps_with_tower(Rectangle& given) {
     Rectangle tower_rect{
         .x = Fixed(0), .y = Fixed(0), .w = Fixed(16), .h = Fixed(16)};
-    for (size_t i = 0; i < m_sub_objects.m_towers.size(); i++) {
-        tower_rect.x = m_sub_objects.m_towers[i].pos.x;
-        tower_rect.y = m_sub_objects.m_towers[i].pos.y;
+    for (size_t i = 0; i < m_main_objects.m_towers.size(); i++) {
+        tower_rect.x = m_main_objects.m_towers[i].pos.x;
+        tower_rect.y = m_main_objects.m_towers[i].pos.y;
         if (rectangles_overlap(given, tower_rect)) {
-            return &m_sub_objects.m_towers[i];
+            return &m_main_objects.m_towers[i];
         }
     }
 
@@ -238,17 +282,50 @@ void DefenceScene::process_player_input() {
             break;
         }
         case CREATE_PRESSED:
-            if (globals::touch_position.px == 0 &&
-                globals::touch_position.py == 0) {
+            if (touch_position_relased(globals::touch_position)) {
+                bgShow(m_menu_bg);
+                m_input_state = CREATE_MENU_SHOWING;
+            }
+            break;
+        case CREATE_MENU_SHOWING:
+            if (touch_position_pressed(globals::touch_position)) {
+                if (globals::touch_position.px < 224) {
+                    bgHide(m_menu_bg);
+                    m_input_state = SELECT;
+                }
+
+                const int x_offset = 224;
+                for (size_t i = 0; i < m_tower_menu.entires.size(); i++) {
+                    const int x_left = x_offset + ((i % 2) * 16);
+                    const int y_top = (i / 2) * 16;
+                    if (m_tower_menu.entires[i].cost <= m_money &&
+                        globals::touch_position.px >= x_left &&
+                        globals::touch_position.px <= x_left + 16 &&
+                        globals::touch_position.py >= y_top &&
+                        globals::touch_position.py <= y_top + 16) {
+                        m_selected_item = &m_tower_menu.entires[i];
+                        m_input_state = CREATE_MENU_SELECTED;
+                        bgHide(m_menu_bg);
+                        break;
+                    }
+                }
+            }
+            break;
+        case CREATE_MENU_SELECTED:
+            if (touch_position_relased(globals::touch_position)) {
                 m_input_state = CREATE;
             }
             break;
         case CREATE: {
             m_cursor->gfx.show = false;
-            if (globals::touch_position.px != 0) {
-                create_cat(m_sub_objects, touch_position,
-                           Position{.x = touch_position.x,
-                                    .y = touch_position.y + 16});
+            if (globals::touch_position.px != 0 &&
+                m_money >= m_selected_item->cost) {
+                auto arg = CreateTowerArg{
+                    .pos = touch_position,
+                    .colPos = Position{.x = touch_position.x,
+                                       .y = touch_position.y + 16}};
+                auto* tower = m_selected_item->func(m_main_objects, arg);
+                if (tower != nullptr) m_money -= m_selected_item->cost;
                 m_input_state = InputState::SELECT;
             }
             break;
@@ -272,13 +349,13 @@ void DefenceScene::spawn_pending() {
     }
 
     if (globals::current_frame >= round.spawns[m_spawn_idx]->frame) {
-        create_mail(m_sub_objects, m_level, *current_spawn);
+        create_mail(m_main_objects, m_level, *current_spawn);
         m_spawn_idx++;
     }
 }
 
 bool DefenceScene::any_mail_active() {
-    for (const auto& mail : m_sub_objects.m_mails) {
+    for (const auto& mail : m_main_objects.m_mails) {
         if (mail.active) {
             return true;
         }
@@ -289,28 +366,28 @@ bool DefenceScene::any_mail_active() {
 
 void DefenceScene::ui_cleanup() {
     if (auto* general = std::get_if<MSGeneral>(&m_ms_state)) {
-        m_main_objects.free_text(general->lives_text);
-        m_main_objects.free_text(general->round_text);
-        m_main_objects.free_text(general->money_text);
+        m_sub_objects.free_text(general->lives_text);
+        m_sub_objects.free_text(general->round_text);
+        m_sub_objects.free_text(general->money_text);
     }
 }
 
 void DefenceScene::ui_change_general() {
-    m_ms_state = MSGeneral{.lives_text = create_text(m_main_objects, 20),
-                           .round_text = create_text(m_main_objects, 20),
-                           .money_text = create_text(m_main_objects, 20)};
+    m_ms_state = MSGeneral{.lives_text = create_text(m_sub_objects, 20),
+                           .round_text = create_text(m_sub_objects, 20),
+                           .money_text = create_text(m_sub_objects, 20)};
 }
 
 void DefenceScene::ui_update() {
-        if (auto* basic = std::get_if<MSGeneral>(&m_ms_state)) {
+    if (auto* basic = std::get_if<MSGeneral>(&m_ms_state)) {
         set_text(
-            m_main_objects.m_text_info, basic->lives_text,
+            m_sub_objects.m_text_info, basic->lives_text,
             fmt::format("Lives: {}", static_cast<int>(m_player.life.currentHp)),
             Position{.x = Fixed(40), .y = Fixed(30)});
-        set_text(m_main_objects.m_text_info, basic->round_text,
+        set_text(m_sub_objects.m_text_info, basic->round_text,
                  fmt::format("Round: {}", m_round_idx + 1),
                  Position{.x = Fixed(40), .y = Fixed(42)});
-        set_text(m_main_objects.m_text_info, basic->money_text,
+        set_text(m_sub_objects.m_text_info, basic->money_text,
                  fmt::format("Money: {}", m_money),
                  Position{.x = Fixed(40), .y = Fixed(54)});
     }

@@ -82,4 +82,12 @@ struct TextGroup {
     size_t count;
 };
 
+inline bool touch_position_relased(const touchPosition& pos) {
+    return pos.z1 == 0 && pos.z2 == 0 && pos.px == 0 && pos.py == 0;
+}
+
+inline bool touch_position_pressed(const touchPosition& pos) {
+    return pos.z1 != 0 && pos.z2 != 0;
+}
+
 }  // namespace sm

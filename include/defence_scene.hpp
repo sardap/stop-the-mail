@@ -4,6 +4,7 @@
 
 #include "bulletin_board.hpp"
 #include "container.hpp"
+#include "create_tower_menu.hpp"
 #include "effect.hpp"
 #include "enemies.hpp"
 #include "level.hpp"
@@ -23,6 +24,8 @@ class DefenceScene {
 
     void update();
 
+    using MainObjects = Container<70, 15, 30, 100>;
+
    private:
     level::Level m_level;
     size_t m_round_idx;
@@ -31,10 +34,20 @@ class DefenceScene {
     Player m_player;
     int m_money;
 
-    Container<0, 0, 0, 0> m_main_objects;
-    Container<70, 15, 30, 100> m_sub_objects;
+    int m_menu_bg;
 
-    enum class InputState { SELECT, CREATE_PRESSED, CREATE };
+    const CreateTowerItem<MainObjects>* m_selected_item;
+
+    Container<0, 0, 0, 0> m_sub_objects;
+    Container<70, 15, 30, 100> m_main_objects;
+
+    enum class InputState {
+        SELECT,
+        CREATE_PRESSED,
+        CREATE_MENU_SHOWING,
+        CREATE_MENU_SELECTED,
+        CREATE
+    };
 
     InputState m_input_state;
     Effect* m_cursor;

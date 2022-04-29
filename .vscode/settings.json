@@ -60,5 +60,8 @@
         "bitset": "cpp"
     },
     "editor.formatOnSave": true,
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Disabled",
+    "cSpell.words": [
+        "begal"
+    ]
 }

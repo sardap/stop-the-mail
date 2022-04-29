@@ -7,6 +7,11 @@
 
 namespace sm {
 
+struct CreateTowerArg {
+    Position pos;
+    Position colPos;
+};
+
 enum class TowerType {
     CAT = 0,
 };
