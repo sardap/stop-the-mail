@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <concepts>
 #include <container.hpp>
 
@@ -20,7 +19,7 @@ void update_tower(T& container, sm::Tower& tower) {
 
     update_oam(tower.pos, tower.gfx);
 
-    if (auto* cat = std::get_if<Cat>(&tower.specific); cat) {
+    if (auto* cat = std::get_if<Cat>(&tower.specific)) {
         if (cat->current_cooldown > 0) {
             cat->current_cooldown--;
         }
@@ -50,8 +49,38 @@ void update_tower(T& container, sm::Tower& tower) {
                     break;
             }
         }
-
         refresh_collision(cat->col);
+    } else if (auto* begal = std::get_if<Begal>(&tower.specific)) {
+        if (begal->current_cooldown > 0) {
+            begal->current_cooldown--;
+        }
+
+        for (size_t i = 0; i < begal->col.collisions.size(); i++) {
+            if (!begal->col.collisions[i]) {
+                break;
+            }
+            const auto& collider = begal->col.collisions[i]->object;
+            switch (collider.type) {
+                case Identity::Type::INVALID:
+                    break;
+                case Identity::Type::MAIL:
+                    if (begal->current_cooldown <= 0) {
+                        apply_damage(collider.mail->life, Fixed(3));
+                        tower.damage_dealt++;
+                        begal->current_cooldown = begal->attack_cooldown;
+                        if (auto* effect = container.get_free_effect()) {
+                            create_cat_attack_effect(
+                                *effect,
+                                Position{.x = collider.mail->postion.x,
+                                         .y = collider.mail->postion.y});
+                        }
+                    }
+                    break;
+                case Identity::Type::TOWER:
+                    break;
+            }
+        }
+        refresh_collision(begal->col);
     }
 }
 

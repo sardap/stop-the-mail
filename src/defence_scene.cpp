@@ -295,6 +295,7 @@ void DefenceScene::process_player_input() {
                 }
 
                 const int x_offset = 224;
+                // TODO add path checking
                 for (size_t i = 0; i < m_tower_menu.entires.size(); i++) {
                     const int x_left = x_offset + ((i % 2) * 16);
                     const int y_top = (i / 2) * 16;
@@ -320,10 +321,7 @@ void DefenceScene::process_player_input() {
             m_cursor->gfx.show = false;
             if (globals::touch_position.px != 0 &&
                 m_money >= m_selected_item->cost) {
-                auto arg = CreateTowerArg{
-                    .pos = touch_position,
-                    .colPos = Position{.x = touch_position.x,
-                                       .y = touch_position.y + 16}};
+                auto arg = CreateTowerArg{.pos = touch_position};
                 auto* tower = m_selected_item->func(m_main_objects, arg);
                 if (tower != nullptr) m_money -= m_selected_item->cost;
                 m_input_state = InputState::SELECT;

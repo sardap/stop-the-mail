@@ -9,11 +9,6 @@ namespace sm {
 
 struct CreateTowerArg {
     Position pos;
-    Position colPos;
-};
-
-enum class TowerType {
-    CAT = 0,
 };
 
 struct Cat {
@@ -23,10 +18,17 @@ struct Cat {
     int current_cooldown;
 };
 
+struct Begal {
+    const static int attack_cooldown = 60;
+
+    Collsion col;
+    int current_cooldown;
+};
+
 struct Tower {
     Position pos;
     Graphics gfx;
-    std::variant<Cat> specific;
+    std::variant<Cat, Begal> specific;
     bool active;
     int damage_dealt;
 };

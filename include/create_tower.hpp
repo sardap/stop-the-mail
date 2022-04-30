@@ -14,7 +14,6 @@ Tower* create_blank(T& container, const CreateTowerArg& arg) {
 template <IsContainer T>
 Tower* create_cat(T& container, const CreateTowerArg& arg) {
     const Position& pos = arg.pos;
-    const Position& col_pos = arg.colPos;
 
     auto* tower_ptr = container.get_free_tower();
     if (tower_ptr == nullptr) {
@@ -25,11 +24,12 @@ Tower* create_cat(T& container, const CreateTowerArg& arg) {
     tower.active = true;
     tower.damage_dealt = 0;
 
+    tower.specific = Cat{};
     Cat& cat = std::get<Cat>(tower.specific);
     setup_collision(
         cat.col,
         Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
-        Rectangle{.x = col_pos.x, .y = col_pos.y, .w = 16, .h = 16});
+        Rectangle{.x = pos.x, .y = pos.y + 16, .w = 16, .h = 16});
     container.add_collsion(&cat.col);
     cat.current_cooldown = 0;
 
@@ -43,7 +43,6 @@ Tower* create_cat(T& container, const CreateTowerArg& arg) {
 template <IsContainer T>
 Tower* create_begal(T& container, const CreateTowerArg& arg) {
     const Position& pos = arg.pos;
-    const Position& col_pos = arg.colPos;
 
     auto* tower_ptr = container.get_free_tower();
     if (tower_ptr == nullptr) {
@@ -54,13 +53,14 @@ Tower* create_begal(T& container, const CreateTowerArg& arg) {
     tower.active = true;
     tower.damage_dealt = 0;
 
-    Cat& cat = std::get<Cat>(tower.specific);
+    tower.specific = Begal{};
+    Begal& begal = std::get<Begal>(tower.specific);
     setup_collision(
-        cat.col,
+        begal.col,
         Collsion::Collider{.type = Identity::Type::TOWER, .tower = &tower},
-        Rectangle{.x = col_pos.x, .y = col_pos.y, .w = 16, .h = 16});
-    container.add_collsion(&cat.col);
-    cat.current_cooldown = 0;
+        Rectangle{.x = pos.x - 16, .y = pos.y - 16, .w = 32, .h = 32});
+    container.add_collsion(&begal.col);
+    begal.current_cooldown = 0;
 
     tower.pos = pos;
     u8* offset = (u8*)towerSpritesheetTiles + (2 * (16 * 16));
