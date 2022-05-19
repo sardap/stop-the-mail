@@ -54,6 +54,7 @@ class DefenceScene {
     int m_cursor_timeout;
 
     Effect* m_building_icon;
+    Effect* m_next_round_icon;
 
     struct MSGeneral {
         TextGroup lives_text;

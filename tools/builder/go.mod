@@ -3,14 +3,15 @@ module builder
 go 1.18
 
 require (
-	github.com/oov/psd v0.0.0-20201203182240-dad9002861d9
+	github.com/oov/psd v0.0.0-20220121172623-5db5eafcecbb
 	github.com/pbnjay/pixfont v0.0.0-20200714042608-33b744692567
-	github.com/pelletier/go-toml v1.9.4
+	github.com/pelletier/go-toml v1.9.5
 )
 
 require (
 	github.com/alibaba/git-repo-go v0.7.8 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/ettle/strcase v0.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-git/go-git v4.7.0+incompatible // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20210413103415-7d3cbed7d026 // indirect

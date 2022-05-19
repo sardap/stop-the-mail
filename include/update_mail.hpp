@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gfx/mailSpritesheet.h>
+#include <gfx/DefenceMailSpritesheet.h>
 
 #include "bulletin_board.hpp"
 #include "common.hpp"
@@ -17,7 +17,7 @@ Mail* create_mail(T& container, const level::Level& level,
     if (mail_ptr == nullptr) {
         return mail_ptr;
     }
-    auto& mail = *mail_ptr;
+    Mail& mail = *mail_ptr;
 
     mail.postion = level.starting_point;
     mail.waypoint = Waypoint{
@@ -58,7 +58,11 @@ Mail* create_mail(T& container, const level::Level& level,
             break;
     }
     mail.life.currentHp = mail.life.maxHp;
-    u8* offset = (u8*)mailSpritesheetTiles + (tileOffset * (16 * 16));
+    mail.gfx.color_format = SpriteColorFormat_256Color;
+    mail.gfx.priority = 1;
+    mail.gfx.size = SpriteSize_16x16;
+    mail.gfx.show = true;
+    u8* offset = (u8*)DefenceMailSpritesheetTiles + (tileOffset * (16 * 16));
     dmaCopy(offset, mail.gfx.tile, 16 * 16);
 
     container.add_collsion(&mail.collsion);

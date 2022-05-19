@@ -26,12 +26,22 @@ void update_oam(Position& pos, Graphics& graphics) {
         graphics.oam_id,
         // postions
         static_cast<int>(pos.x), static_cast<int>(pos.y),
-        // priority, palette
-        0, 0,
+        // priority
+        0,
+        // palette
+        graphics.priority,
         // size
-        SpriteSize_16x16, SpriteColorFormat_256Color,
-        graphics.tile,  // the oam gfx
-        -1, false, !graphics.show, false, false, false);
+        graphics.size,
+        // Colour Format
+        graphics.color_format,
+        // the oam gfx
+        graphics.tile,
+        // Affine Index
+        -1, false,
+        // Hide
+        !graphics.show,
+        // H Flip
+        false, false, false);
 }
 
 void apply_damage(Life& life, Fixed damage) { life.currentHp -= damage; }

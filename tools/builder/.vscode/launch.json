@@ -7,13 +7,14 @@
 			"mode": "debug",
 			"program": "${workspaceFolder}",
 			"cwd": "${workspaceFolder}",
+			"envFile": "${workspaceFolder}/.env",
 			"args": [
 				"build",
 				"${workspaceFolder}/../..",
 				"${workspaceFolder}/../../build.toml",
 				"${workspaceFolder}/../../assets",
 				"${workspaceFolder}/../../build",
-				"${workspaceFolder}/../map-maker/cmd/gen",
+				"${workspaceFolder}/../map-maker/cmd/gen"
 			]
 		},
 		{

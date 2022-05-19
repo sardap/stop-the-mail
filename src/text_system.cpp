@@ -1,4 +1,4 @@
-#include <gfx/dsBasic.h>
+#include <gfx/FontDsBasic.h>
 
 #include <text_system.hpp>
 
@@ -6,9 +6,9 @@ namespace sm {
 
 void init_text(TextInfo& text) {
     text.sheet_offset =
-        oamAllocateGfx(text.oam, static_cast<SpriteSize>(dsBasicTilesLen),
+        oamAllocateGfx(text.oam, static_cast<SpriteSize>(FontDsBasicTilesLen),
                        SpriteColorFormat_256Color);
-    dmaCopy(dsBasicTiles, text.sheet_offset, dsBasicTilesLen);
+    dmaCopy(FontDsBasicTiles, text.sheet_offset, FontDsBasicTilesLen);
 
     for (size_t i = 0; i < text.oam_count; i++) {
         oamSetGfx(text.oam, i + text.oam_offset, SpriteSize_16x16,

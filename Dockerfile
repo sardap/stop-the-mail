@@ -31,24 +31,19 @@ RUN go build -o main .
 
 ##################################################
 
-# Devkit pro image is out of date also deabain is fucked here for some reason
-FROM devkitpro/devkitarm:latest as GBA-builder
+FROM psarda/devkitproubuntu:2210-nds as GBA-builder
 
-#Copy colour agg tool
+RUN apt-get update -y \
+    && apt-get install -y libx11-dev libxcursor-dev libgl1-mesa-dev libfontconfig1-dev
+
+COPY --from=psarda/asepritecliubuntu:2210 /aseprite /aseprite
 COPY --from=map-maker-builder /app/main /bin/map-maker-builder.exe
-
-#Copy builder
 COPY --from=builder-builder /app/main /bin/builder
-RUN chmod +x /bin/builder
 
 RUN mkdir /app
-
 WORKDIR /app
 
-COPY ./assets ./assets
-COPY ./include ./include
-COPY ./src ./src
-COPY ./build.toml .
-COPY Makefile .
+ENV ASEPRITE_PATH /aseprite/aseprite
 
-RUN builder build /app /app/build.toml /app/assets /app/build map-maker-builder.exe DEBUG=1 
+ENTRYPOINT [ "builder" ]
+CMD [ "build", "/app", "/app/build.toml", "/app/assets", "/app/build", "map-maker-builder.exe", "DEBUG=1" ]

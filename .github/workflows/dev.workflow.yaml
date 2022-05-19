@@ -14,5 +14,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Build Image and rom
+      - name: Build Image
         run: docker build . -t stm-builder:latest
+      - name: Build Rom
+        run: docker run -v ${PWD}:/app stm-builder:latest

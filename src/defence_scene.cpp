@@ -1,9 +1,9 @@
 #include <fmt/format.h>
-#include <gfx/defenceMenu.h>
-#include <gfx/defenceSceneMainShared.h>
-#include <gfx/defenceSceneSubShared.h>
-#include <gfx/defenceStatsBackground.h>
-#include <gfx/uiSprites.h>
+#include <gfx/DefenceMenu.h>
+#include <gfx/DefenceSceneMainShared.h>
+#include <gfx/DefenceSceneSubShared.h>
+#include <gfx/DefenceStatsBackground.h>
+#include <gfx/DefenceUiSprites.h>
 #include <nds.h>
 #include <stdio.h>
 
@@ -58,6 +58,12 @@ static const int input_cooldown_max = 10;
 static const Rectangle building_icon_rect =
     Rectangle{.x = Fixed(16), .y = Fixed(176), .w = Fixed(16), .h = Fixed(16)};
 
+static const Rectangle next_round_icon_rect =
+    Rectangle{.x = building_icon_rect.x + building_icon_rect.w + Fixed(3),
+              .y = Fixed(176),
+              .w = Fixed(16),
+              .h = Fixed(16)};
+
 DefenceScene::DefenceScene() {}
 
 DefenceScene::~DefenceScene() {}
@@ -82,20 +88,22 @@ void DefenceScene::load(SceneArgs args) {
 
         vramSetBankA(VRAM_A_MAIN_BG);
         m_menu_bg = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 4, 0);
-        decompress(defenceMenuTiles, bgGetGfxPtr(m_menu_bg), LZ77Vram);
-        dmaCopy(defenceMenuMap, bgGetMapPtr(m_menu_bg), defenceMenuMapLen);
-        dmaCopy(defenceMenuPal, BG_PALETTE, defenceMenuPalLen);
+        decompress(DefenceMenuTiles, bgGetGfxPtr(m_menu_bg), LZ77Vram);
+        dmaCopy(DefenceMenuMap, bgGetMapPtr(m_menu_bg), DefenceMenuMapLen);
+        dmaCopy(DefenceMenuPal, BG_PALETTE, DefenceMenuPalLen);
         bgHide(m_menu_bg);
+        bgSetPriority(m_menu_bg, 0);
 
         vramSetBankD(VRAM_D_MAIN_BG);
         int bg2 = bgInit(2, BgType_Bmp16, BgSize_B16_256x256, 1, 0);
         decompress(m_level.background.bitmap, bgGetGfxPtr(bg2), LZ77Vram);
+        bgSetPriority(bg2, 3);
 
         vramSetBankB(VRAM_B_MAIN_SPRITE);
         oamInit(&oamMain, SpriteMapping_1D_128, false);
 
-        dmaCopy(defenceSceneSubSharedPal, SPRITE_PALETTE,
-                defenceSceneSubSharedPalLen);
+        dmaCopy(DefenceSceneSubSharedPal, SPRITE_PALETTE,
+                DefenceSceneSubSharedPalLen);
     }
 
     // Sub Screen
@@ -105,11 +113,11 @@ void DefenceScene::load(SceneArgs args) {
         vramSetBankC(VRAM_C_SUB_BG);
 
         int bg = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 0, 1);
-        decompress(defenceStatsBackgroundTiles, bgGetGfxPtr(bg), LZ77Vram);
-        dmaCopy(defenceStatsBackgroundMap, bgGetMapPtr(bg),
-                defenceStatsBackgroundMapLen);
-        dmaCopy(defenceStatsBackgroundPal, BG_PALETTE_SUB,
-                defenceStatsBackgroundPalLen);
+        decompress(DefenceStatsBackgroundMap, bgGetGfxPtr(bg), LZ77Vram);
+        dmaCopy(DefenceStatsBackgroundMap, bgGetMapPtr(bg),
+                DefenceStatsBackgroundMapLen);
+        dmaCopy(DefenceStatsBackgroundPal, BG_PALETTE_SUB,
+                DefenceStatsBackgroundPalLen);
 
         vramSetBankI(VRAM_I_SUB_SPRITE);
         oamInit(&oamSub, SpriteMapping_1D_128, false);
@@ -120,8 +128,8 @@ void DefenceScene::load(SceneArgs args) {
         m_sub_objects.m_text_info.sheet_offset = nullptr;
         init_text(m_sub_objects.m_text_info);
 
-        dmaCopy(defenceSceneMainSharedPal, SPRITE_PALETTE_SUB,
-                defenceSceneMainSharedPalLen);
+        dmaCopy(DefenceSceneMainSharedPal, SPRITE_PALETTE_SUB,
+                DefenceSceneMainSharedPalLen);
 
         ui_change_general();
     }
@@ -209,20 +217,22 @@ void DefenceScene::update() {
 }
 
 void DefenceScene::init_ui_elements() {
-    // Sub Screen
+    // cursor
     {
         m_cursor = m_main_objects.get_free_effect();
         m_cursor->active = true;
         m_cursor->gfx.tile = oamAllocateGfx(m_cursor->gfx.oam, SpriteSize_16x16,
                                             SpriteColorFormat_256Color);
         m_cursor->gfx.show = false;
+        m_cursor->gfx.size = SpriteSize_16x16;
+        m_cursor->gfx.priority = 3;
+        m_cursor->gfx.color_format = SpriteColorFormat_256Color;
         m_cursor->pos = Position{.x = Fixed(0), .y = Fixed(0)};
         m_cursor->specific = StaticEffect{};
-        u8* offset = (u8*)uiSpritesTiles + (0 * (16 * 16));
+        u8* offset = (u8*)DefenceUiSpritesTiles + (0 * (16 * 16));
         dmaCopy(offset, m_cursor->gfx.tile, 16 * 16);
     }
-
-    // Main Screen
+    // Building icon
     {
         m_building_icon = m_main_objects.get_free_effect();
         m_building_icon->active = true;
@@ -230,11 +240,31 @@ void DefenceScene::init_ui_elements() {
             oamAllocateGfx(m_building_icon->gfx.oam, SpriteSize_16x16,
                            SpriteColorFormat_256Color);
         m_building_icon->gfx.show = true;
+        m_building_icon->gfx.priority = 3;
+        m_building_icon->gfx.size = SpriteSize_16x16;
+        m_building_icon->gfx.color_format = SpriteColorFormat_256Color;
         m_building_icon->pos =
             Position{.x = building_icon_rect.x, .y = building_icon_rect.y};
         m_building_icon->specific = StaticEffect{};
-        u8* offset = (u8*)uiSpritesTiles + (1 * (16 * 16));
+        u8* offset = (u8*)DefenceUiSpritesTiles + (1 * (16 * 16));
         dmaCopy(offset, m_building_icon->gfx.tile, 16 * 16);
+    }
+    // next round icon
+    {
+        m_next_round_icon = m_main_objects.get_free_effect();
+        m_next_round_icon->active = true;
+        m_next_round_icon->gfx.tile =
+            oamAllocateGfx(m_next_round_icon->gfx.oam, SpriteSize_32x16,
+                           SpriteColorFormat_256Color);
+        m_next_round_icon->gfx.show = true;
+        m_next_round_icon->gfx.priority = 3;
+        m_next_round_icon->gfx.size = SpriteSize_32x16;
+        m_next_round_icon->gfx.color_format = SpriteColorFormat_256Color;
+        m_next_round_icon->pos =
+            Position{.x = next_round_icon_rect.x, .y = next_round_icon_rect.y};
+        m_next_round_icon->specific = StaticEffect{};
+        u8* offset = (u8*)DefenceUiSpritesTiles + (2 * (16 * 16));
+        dmaCopy(offset, m_next_round_icon->gfx.tile, 32 * 16);
     }
 }
 

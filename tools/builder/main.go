@@ -60,6 +60,7 @@ func main() {
 		assetsPath := os.Args[4]
 		targetPath := os.Args[5]
 		generatePath := os.Args[6]
+		assets.AsepritePath = os.Getenv("ASEPRITE_PATH")
 
 		fmt.Printf("Assets: %s Target: %s\n", assetsPath, targetPath)
 

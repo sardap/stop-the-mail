@@ -2,6 +2,7 @@ package assets
 
 import (
 	"builder/gbacolour"
+	"encoding/gob"
 	"image"
 	"image/color"
 	"image/draw"
@@ -12,7 +13,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ettle/strcase"
 	"github.com/pbnjay/pixfont"
 
 	_ "github.com/oov/psd"
@@ -28,36 +29,34 @@ import (
 )
 
 var (
+	AsepritePath string
 	// Grit Really doens't like async shit
 	gritMutex = &sync.Mutex{}
 )
 
+const (
+	ModePhotoshop = ""
+	ModeAseprite  = "aseprite"
+)
+
+type GraphicsCache struct {
+	BuildFileMod time.Time
+	ModTimes     map[string]time.Time
+}
+
+func (g *GraphicsCache) Update(assetPath string, gfx *GraphicsOutput) {
+	for _, f := range gfx.Files {
+		stat, _ := os.Stat(filepath.Join(assetPath, f))
+		g.ModTimes[f] = stat.ModTime()
+	}
+}
+
 type GraphicsOutput struct {
 	Name    string
+	Mode    string
 	Options []string
 	Files   []string
 	Dirs    []string
-}
-
-func (g *GraphicsOutput) addFilesFromDirs(assetsPath string) {
-	for _, dir := range g.Dirs {
-		dFiles, err := ioutil.ReadDir(filepath.Join(assetsPath, dir))
-		if err != nil {
-			panic(err)
-		}
-
-		for _, f := range dFiles {
-			if filepath.Ext(f.Name()) == ".png" {
-				g.Files = append(
-					g.Files,
-					filepath.Join(
-						dir,
-						strings.TrimSuffix(f.Name(), ".png"),
-					),
-				)
-			}
-		}
-	}
 }
 
 func (g *GraphicsOutput) clearTargetFiles(targetPath string) {
@@ -81,20 +80,15 @@ func (g *GraphicsOutput) clearTargetFiles(targetPath string) {
 	}
 }
 
-func (g *GraphicsOutput) changedFiles(
-	updatedFiles map[string]bool,
-) []string {
-	var result []string
-
+func (g *GraphicsOutput) Changed(gfxCache *GraphicsCache) bool {
 	for _, f := range g.Files {
-		baseFile := filepath.Base(f)
-
-		if _, ok := updatedFiles[baseFile]; ok {
-			result = append(result, baseFile)
+		lastMod, ok := gfxCache.ModTimes[f]
+		if ok || time.Now().After(lastMod) {
+			return true
 		}
 	}
 
-	return result
+	return false
 }
 
 func buildMapMaker(mapGenPath string) string {
@@ -145,7 +139,32 @@ func (m *MapOutput) Generate(mapGenPath, assetsPath, targetPath string) {
 	}
 }
 
-//Make makes assets
+const gfxCacheFile = "gfxCache.gob"
+
+func loadGfxCache() *GraphicsCache {
+	f, err := os.Open(gfxCacheFile)
+	if err != nil {
+		return &GraphicsCache{
+			ModTimes:     make(map[string]time.Time),
+			BuildFileMod: time.Time{},
+		}
+	}
+	defer f.Close()
+
+	var result GraphicsCache
+	dec := gob.NewDecoder(f)
+	dec.Decode(&result)
+
+	return &result
+}
+
+func saveGfxCache(gfxCache *GraphicsCache) {
+	f, _ := os.Create(gfxCacheFile)
+	defer f.Close()
+	enc := gob.NewEncoder(f)
+	enc.Encode(*gfxCache)
+}
+
 func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 	gfxTargetPath := filepath.Join(targetPath, "gfx")
 
@@ -167,40 +186,6 @@ func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(60)*time.Second)
 	defer cancel()
 
-	updatedFiles := make(map[string]bool)
-	ch := make(chan map[string]bool)
-	qCh := make(chan struct{})
-	var wg sync.WaitGroup
-
-	filepath.Walk(assetsPath, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			return nil
-		}
-
-		wg.Add(1)
-		go func(ch chan map[string]bool, wg *sync.WaitGroup) {
-			defer wg.Done()
-			ch <- genPngs(ctx, gfxTargetPath, path)
-			fmt.Printf("Done pnging %s\n", path)
-		}(ch, &wg)
-		return nil
-	})
-
-	go func() {
-		wg.Wait()
-		close(qCh)
-	}()
-
-	complete := false
-	for !complete {
-		select {
-		case msg := <-ch:
-			updatedFiles = mapUnion(updatedFiles, msg)
-		case <-qCh:
-			complete = true
-		}
-	}
-
 	fmt.Printf("\nRunning Graphics\n")
 
 	//Change into dir for grit
@@ -208,15 +193,19 @@ func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 	os.Chdir(gfxTargetPath)
 	defer os.Chdir(workingDir)
 
+	gfxCache := loadGfxCache()
+	defer saveGfxCache(gfxCache)
+
+	buildFileStat, _ := os.Stat(buildFilePath)
+
 	for _, target := range config.Graphics {
-		target.addFilesFromDirs(assetsPath)
-		targetChangedFiles := target.changedFiles(updatedFiles)
-		if len(targetChangedFiles) == 0 {
+
+		if !gfxCache.BuildFileMod.Before(buildFileStat.ModTime()) && target.Changed(gfxCache) {
+			fmt.Printf("\nNo Changes %s\n", target.Name)
 			continue
 		}
 
 		fmt.Printf("\nBuilding %s\n", target.Name)
-		fmt.Printf("Files changed %v\n", targetChangedFiles)
 
 		target.clearTargetFiles(targetPath)
 
@@ -224,7 +213,11 @@ func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 		if err != nil && !strings.Contains(err.Error(), "signal: segmentation fault") {
 			fmt.Printf("Grit error Probably doesn't matter %v\n", err)
 		}
+
+		gfxCache.Update(assetsPath, &target)
 	}
+
+	gfxCache.BuildFileMod = buildFileStat.ModTime()
 
 	fmt.Printf("\nRunning Maps\n")
 
@@ -236,25 +229,15 @@ func Make(generatePath, buildFilePath, assetsPath, targetPath string) {
 	}
 }
 
-func mapUnion(a, b map[string]bool) map[string]bool {
-	for k, v := range b {
-		a[k] = v
-	}
-
-	return a
-}
-
-func toPngFileName(filename string) string {
-	return fmt.Sprintf("%s.png", strings.TrimSuffix(filename, ".psd"))
-}
-
 func gritCall(ctx context.Context, assetsPath, targetPath string, target *GraphicsOutput) error {
 	gritMutex.Lock()
 	defer gritMutex.Unlock()
 
 	var arguments []string
 	for _, f := range target.Files {
-		arguments = append(arguments, fmt.Sprintf("%s.png", filepath.Join(assetsPath, f)))
+		pngFile := genPng(context.Background(), filepath.Join(assetsPath, f))
+		defer os.Remove(pngFile)
+		arguments = append(arguments, pngFile)
 	}
 	for _, option := range target.Options {
 		arguments = append(arguments, strings.Split(option, " ")...)
@@ -271,7 +254,24 @@ func gritCall(ctx context.Context, assetsPath, targetPath string, target *Graphi
 	return cmd.Run()
 }
 
-func toPng(ctx context.Context, filename string) {
+func replaceTransparentColour(filename string) {
+	transColour := color.RGBA{R: 255, G: 0, B: 255, A: 255}
+	blankColour := color.RGBA{}
+
+	f, _ := os.Open(filename)
+	img, _, _ := image.Decode(f)
+	rgbaImg := img.(draw.Image)
+	f.Close()
+	for y := 0; y < rgbaImg.Bounds().Dy(); y++ {
+		for x := 0; x < rgbaImg.Bounds().Dx(); x++ {
+			if rgbaImg.At(x, y) == blankColour {
+				rgbaImg.Set(x, y, transColour)
+			}
+		}
+	}
+}
+
+func psdToPng(ctx context.Context, filename string, outfile string) {
 	ch := make(chan struct{})
 
 	go func() {
@@ -292,8 +292,7 @@ func toPng(ctx context.Context, filename string) {
 
 		img = gbacolour.ConvertImg(img)
 
-		os.Remove(toPngFileName(filename))
-		pngFile, _ := os.Create(toPngFileName(filename))
+		pngFile, _ := os.Create(outfile)
 		defer pngFile.Close()
 		png.Encode(pngFile, img)
 
@@ -309,11 +308,11 @@ func toPng(ctx context.Context, filename string) {
 	}
 }
 
-func getGenratedAsset(generatedAssetsPath, filename string) string {
-	baseFile := filepath.Base(filename)
-	baseFile = baseFile[:len(baseFile)-4]
-
-	return filepath.Join(generatedAssetsPath, fmt.Sprintf("%s.h", baseFile))
+func asepriteToPng(ctx context.Context, filename, outfile string) {
+	cmd := exec.CommandContext(ctx, AsepritePath, filename, "--batch", "--sheet", outfile)
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func getVersion() string {
@@ -353,32 +352,26 @@ func overlayVersion(inImg image.Image) image.Image {
 	return dst
 }
 
-func genPngs(ctx context.Context, generatedAssetsPath, targetDir string) map[string]bool {
-	items, err := ioutil.ReadDir(targetDir)
-	if err != nil {
-		panic(err)
+func genPng(ctx context.Context, inputFile string) string {
+
+	idx := strings.Index(inputFile, string(filepath.Separator)+"gfx")
+	outfile, _ := os.Getwd()
+	outfile += string(filepath.Separator)
+	for _, part := range strings.Split(inputFile[idx+4:], string(filepath.Separator)) {
+		outfile += strcase.ToPascal(strings.TrimSuffix(part, filepath.Ext(part)))
+	}
+	outfile += ".png"
+
+	switch filepath.Ext(inputFile) {
+	case ".psd":
+		psdToPng(ctx, inputFile, outfile)
+	case ".aseprite":
+		asepriteToPng(ctx, inputFile, outfile)
+	default:
+		panic(fmt.Errorf("unknown ext %s", filepath.Ext(inputFile)))
 	}
 
-	result := make(map[string]bool)
-	for _, item := range items {
-		if item.IsDir() {
-			continue
-		}
+	replaceTransparentColour(outfile)
 
-		if filepath.Ext(item.Name()) == ".psd" {
-			psdFile := filepath.Join(targetDir, item.Name())
-			psdStat, _ := os.Stat(psdFile)
-
-			baseFile := strings.TrimSuffix(filepath.Base(item.Name()), ".psd")
-
-			assetStat, genErr := os.Stat(getGenratedAsset(generatedAssetsPath, item.Name()))
-			if genErr != nil || psdStat.ModTime().After(assetStat.ModTime()) {
-				toPng(ctx, psdFile)
-				result[filepath.Base(baseFile)] = true
-			}
-
-		}
-	}
-
-	return result
+	return outfile
 }

@@ -58,11 +58,14 @@
         "variant": "cpp",
         "ranges": "cpp",
         "bitset": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "istream": "cpp"
     },
     "editor.formatOnSave": true,
     "C_Cpp.errorSquiggles": "Disabled",
     "cSpell.words": [
-        "begal"
+        "Aseprite",
+        "begal",
+        "Defence"
     ]
 }

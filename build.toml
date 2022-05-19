@@ -1,5 +1,5 @@
 [[Graphics]]
-name="defence scene sub"
+name="defence scene main"
 options=[
     "-fts",				    # Create s file
     "-m!",				    # No Map
@@ -9,12 +9,12 @@ options=[
     "-pS",				    # Share pallet
     "-Mh2",			        # output data as byte array
     "-Mw2",         	
-    "-O defenceSceneSubShared" # Shared pallet name
+    "-O DefenceSceneSubShared" # Shared pallet name
 ]
 files=[
-    "gfx/defence/uiSprites",
-    "gfx/defence/mailSpritesheet",
-    "gfx/defence/towerSpritesheet",
+    "gfx/defence/UiSprites.psd",
+    "gfx/defence/MailSpritesheet.psd",
+    "gfx/defence/TowerSpritesheet.psd",
 ]
 
 [[Graphics]]
@@ -32,7 +32,7 @@ options=[
     "-g",					# Share tiles
 ]
 files=[
-    "gfx/defence/defenceMenu",
+    "gfx/defence/Menu.psd",
 ]
 
 [[Graphics]]
@@ -50,7 +50,7 @@ options=[
     "-g",					# Share tiles
 ]
 files=[
-    "gfx/defence/defenceStatsBackground",
+    "gfx/defence/StatsBackground.psd",
 ]
 
 [[Graphics]]
@@ -64,12 +64,11 @@ options=[
     "-pS",				    # Share pallet
     "-Mh2",			        # output data as byte array
     "-Mw2",         	
-    "-O defenceSceneMainShared" # Shared pallet name
+    "-O DefenceSceneMainShared" # Shared pallet name
 ]
 files=[
-    "gfx/font/dsBasic",
+    "gfx/font/dsBasic.psd",
 ]
-
 
 [[Maps]]
 path="maps/greenMap.json"

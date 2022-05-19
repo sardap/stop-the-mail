@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gfx/towerSpritesheet.h>
+#include <gfx/DefenceTowerSpritesheet.h>
 
 #include <container.hpp>
 
@@ -34,7 +34,9 @@ Tower* create_cat(T& container, const CreateTowerArg& arg) {
     cat.current_cooldown = 0;
 
     tower.pos = pos;
-    u8* offset = (u8*)towerSpritesheetTiles + (0 * (16 * 16));
+    tower.gfx.color_format = SpriteColorFormat_256Color;
+    tower.gfx.size = SpriteSize_16x16;
+    u8* offset = (u8*)DefenceTowerSpritesheetTiles + (0 * (16 * 16));
     dmaCopy(offset, tower.gfx.tile, 16 * 16);
 
     return tower_ptr;
@@ -48,7 +50,7 @@ Tower* create_begal(T& container, const CreateTowerArg& arg) {
     if (tower_ptr == nullptr) {
         return nullptr;
     }
-    auto& tower = *tower_ptr;
+    Tower& tower = *tower_ptr;
     assert(tower.active == false);
     tower.active = true;
     tower.damage_dealt = 0;
@@ -63,7 +65,10 @@ Tower* create_begal(T& container, const CreateTowerArg& arg) {
     begal.current_cooldown = 0;
 
     tower.pos = pos;
-    u8* offset = (u8*)towerSpritesheetTiles + (2 * (16 * 16));
+    tower.gfx.color_format = SpriteColorFormat_256Color;
+    tower.gfx.priority = 1;
+    tower.gfx.size = SpriteSize_16x16;
+    u8* offset = (u8*)DefenceTowerSpritesheetTiles + (2 * (16 * 16));
     dmaCopy(offset, tower.gfx.tile, 16 * 16);
 
     return tower_ptr;

@@ -48,8 +48,9 @@ struct Graphics {
     OamState* oam;
     int oam_id;
     bool show;
+    int priority;
     SpriteSize size;
-    SpriteColorFormat colorFormat;
+    SpriteColorFormat color_format;
 
     ~Graphics();
 };
